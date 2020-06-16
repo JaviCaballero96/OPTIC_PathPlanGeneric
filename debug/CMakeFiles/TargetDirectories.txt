@@ -1,0 +1,16 @@
+/home/caba/Escritorio/planners/optic_generic/debug/CMakeFiles/rebuild_cache.dir
+/home/caba/Escritorio/planners/optic_generic/debug/CMakeFiles/edit_cache.dir
+/home/caba/Escritorio/planners/optic_generic/debug/VALfiles/CMakeFiles/edit_cache.dir
+/home/caba/Escritorio/planners/optic_generic/debug/VALfiles/CMakeFiles/parser.dir
+/home/caba/Escritorio/planners/optic_generic/debug/VALfiles/CMakeFiles/rebuild_cache.dir
+/home/caba/Escritorio/planners/optic_generic/debug/VALfiles/CMakeFiles/Inst.dir
+/home/caba/Escritorio/planners/optic_generic/debug/VALfiles/CMakeFiles/validate.dir
+/home/caba/Escritorio/planners/optic_generic/debug/VALfiles/parsing/CMakeFiles/rebuild_cache.dir
+/home/caba/Escritorio/planners/optic_generic/debug/VALfiles/parsing/CMakeFiles/ParsePDDL.dir
+/home/caba/Escritorio/planners/optic_generic/debug/VALfiles/parsing/CMakeFiles/edit_cache.dir
+/home/caba/Escritorio/planners/optic_generic/debug/optic/CMakeFiles/rebuild_cache.dir
+/home/caba/Escritorio/planners/optic_generic/debug/optic/CMakeFiles/optic-clp.dir
+/home/caba/Escritorio/planners/optic_generic/debug/optic/CMakeFiles/OpticCommon.dir
+/home/caba/Escritorio/planners/optic_generic/debug/optic/CMakeFiles/edit_cache.dir
+/home/caba/Escritorio/planners/optic_generic/debug/optic/CMakeFiles/doxygenoptic.dir
+/home/caba/Escritorio/planners/optic_generic/debug/optic/CMakeFiles/doc.dir
