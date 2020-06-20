@@ -95,6 +95,7 @@ bool FF::allowCompressionSafeScheduler = false;
 int FF::statesDiscardedAsTooExpensiveBeforeHeuristic = 0;
 
 bool FF::costOptimalAStar = false;
+bool FF::distanceRiskBatteryMetric = false;
 
 #ifdef POPF3ANALYSIS
 double FF::reprocessQualityBound = std::numeric_limits<double>::signaling_NaN();
@@ -1706,6 +1707,45 @@ public:
         }
     }
 
+    SearchQueueItem* getIndex(int index) {
+        static int lastTime = 0;
+        if (!qOne.empty()) {
+            if (lastTime != 1) {
+                lastTime = 1;
+                if (Globals::globalVerbosity & 1) {
+                    cout << "\n1: ";
+                    cout.flush();
+                }
+            }
+            int size = qOne.size();
+            if(index >= size)
+            {
+            	return NULL;
+            }
+            map<double, list<SearchQueueItem*> >::iterator mItr = qOne.begin();
+            std::advance (mItr,index);
+            SearchQueueItem* const toReturn = mItr->second.front();
+            return toReturn;
+        } else {
+            if (lastTime != 2) {
+                lastTime = 2;
+                if (Globals::globalVerbosity & 1) {
+                    cout << "\n2: ";
+                    cout.flush();
+                }
+            }
+            int size = qTwo.size();
+            if(index >= size)
+            {
+            	return NULL;
+            }
+            map<double, list<SearchQueueItem*> >::iterator mItr = qTwo.begin();
+            std::advance (mItr,index);
+            SearchQueueItem* const toReturn = mItr->second.front();
+            return toReturn;
+        }
+    }
+
     SearchQueueItem * back() {
         if (qTwo.empty()) {
             return qOne.rbegin()->second.back();
@@ -1732,7 +1772,7 @@ public:
 
     void insert(SearchQueueItem* p, const int category = 1) {
 
-        if (FF::costOptimalAStar) {
+        if (FF::distanceRiskBatteryMetric) {
             const double pCost = p->heuristicValue.admissibleCostEstimate;
             list<SearchQueueItem*> & q = (category == 1 ? qOne[pCost] : qTwo[pCost]);
             
@@ -1746,6 +1786,23 @@ public:
             }
             q.push_back(p);
             
+            return;
+        }
+
+        if (FF::costOptimalAStar) {
+            const double pCost = p->heuristicValue.admissibleCostEstimate;
+            list<SearchQueueItem*> & q = (category == 1 ? qOne[pCost] : qTwo[pCost]);
+
+            list<SearchQueueItem*>::iterator qItr = q.begin();
+            const list<SearchQueueItem*>::iterator qEnd = q.end();
+            for (; qItr != qEnd; ++qItr) {
+                if (p->heuristicValue < (*qItr)->heuristicValue) {
+                    q.insert(qItr, p);
+                    return;
+                }
+            }
+            q.push_back(p);
+
             return;
         }
         
@@ -1805,6 +1862,48 @@ public:
 
     bool empty() const {
         return (qOne.empty() && qTwo.empty());
+    }
+
+    void printSearchItems()
+    {
+    	int i = 0, pass;
+    	if (!qOne.empty()) {
+    		pass = 0;
+    	}else
+    	{
+    		pass = 1;
+    	}
+
+    	map<double, list<SearchQueueItem*> > & currMap = (pass ? qTwo : qOne);
+
+        cout << "Te elements in the list are the following: " << endl;
+        map<double, list<SearchQueueItem*> >::iterator cmItr = currMap.begin();
+        const map<double, list<SearchQueueItem*> >::iterator cmEnd = currMap.end();
+
+        cout << "Elemet " << i << " - " << cmItr->first << endl;
+        //list<SearchQueueItem*>::iterator qItr = cmItr->second.begin();
+        //(*qItr)->printPlan();
+
+        for (; cmItr != cmEnd; ++cmItr) {
+        	list<SearchQueueItem*>::iterator qItr = cmItr->second.begin();
+        	const list<SearchQueueItem*>::iterator qEnd = cmItr->second.end();
+
+        	cout << "Elemet " << i << " - " << cmItr->first << endl;
+        	for (; qItr != qEnd; ++qItr) {
+        		(*qItr)->printPlan();
+        	}
+
+			i++;
+		}
+    }
+
+    int size() {
+    	 if (!qOne.empty()) {
+    		 return qOne.size();
+    	 }else
+    	 {
+    		 return qTwo.size();
+    	 }
     }
 
 };
@@ -6868,15 +6967,19 @@ Solution FF::search(bool & reachedGoal)
                 }
             }
 
-            
+            if(Globals::globalVerbosity & 10)
+             {
+         	   searchQueue.printSearchItems();
+             }
             auto_ptr<SearchQueueItem> currSQI(searchQueue.pop_front());
 
-            //cout << "SQI at " << currSQI.get() << ", EMS at " << currSQI->state() << endl;
+            cout << "SQI at " << currSQI.get() << ", EMS at " << currSQI->state() << endl;
             
             if (currSQI->state()->hasBeenDominated) {
                 continue;
             }
-            
+
+
             if (Globals::globalVerbosity & 2) {
                 cout << "\n--\n";
                 cout << "Now visiting state with heuristic value of " << currSQI->heuristicValue.heuristicValue << " | " << currSQI->heuristicValue.makespan << "\n";
@@ -7178,7 +7281,7 @@ Solution FF::search(bool & reachedGoal)
                                                     incrementalData.get(), succ->helpfulActions, currentCost, *helpfulActsItr, currSQI->plan, newDummySteps);
                         }
 
-                        //succ->printPlan();
+                        succ->printPlan();
                         if (succ->heuristicValue.heuristicValue != -1.0) {
 
                             bool keepState = true;

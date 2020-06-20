@@ -485,6 +485,7 @@ public:
     static double reprocessQualityBound;
     static int statesDiscardedAsTooExpensiveBeforeHeuristic;
     static bool costOptimalAStar;
+    static bool distanceRiskBatteryMetric;
     static bool relaxMIP;
     //static list<instantiatedOp*> * solveSubproblem(LiteralSet & startingState, vector<pair<PNE*, double> > & startingFluents, SubProblem* const s);
     static Solution search(bool & reachedGoal);

@@ -57,6 +57,8 @@
 
 #include "PreferenceHandler.h"
 
+#include "pathPlanningOp.h"
+
 #ifdef STOCHASTICDURATIONS
 #include "StochasticDurations.h"
 #endif
@@ -3163,8 +3165,23 @@ void RPGBuilder::initialise()
         } while (instantiatedOp::howMany() < numBefore);
     }
     if (RPGdebug && Globals::globalVerbosity & 65536) instantiatedOp::writeAllPNEs(cout);
-
     
+    //PNEs: Functions expanded with all possible values of its parameters
+    pathPlan.createPathPlanRoutes(instantiatedOp::opsBegin(),instantiatedOp::opsEnd(),
+			instantiatedOp::pnesBegin(),instantiatedOp::pnesEnd());
+    cout << current_analysis->the_problem->domain_name << endl;
+    cout << *(current_analysis->the_problem->initial_state) << endl;
+    pathPlan.createPositionList();
+    pathPlan.printAllPositions();
+    pathPlan.storeOriginGoalsAgents(*(current_analysis->the_problem->the_goal),
+    		*(current_analysis->the_problem->initial_state));
+    pathPlan.storeMetric(current_analysis->the_problem->metric);
+    pathPlan.printAllRoutes();
+    pathPlan.storeDirectPathsPerPos();
+    pathPlan.printDirectPathsPerPos();
+    pathPlan.calculateAllShortPaths();
+    pathPlan.printAllShortPaths();
+
     #ifdef ENABLE_DEBUGGING_HOOKS
     Globals::markThatActionsInPlanHaveToBeKept();
     #endif

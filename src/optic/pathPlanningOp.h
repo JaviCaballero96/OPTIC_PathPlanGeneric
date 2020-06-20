@@ -44,15 +44,9 @@ class Position{
 		list<DijkstraPath*> shortPaths;
 
 		double risk;
-		bool photoTaken;
-		bool photoNeeded;
-		bool photoTransmitted;
 
-		Position():risk(0){
-			photoTaken = false;
-			photoNeeded = false;
-			photoTransmitted = false;
-		}
+		Position():risk(0){}
+
 		Position(const Position& pos);
 
 		list<pathObj*>::const_iterator getPathBegin() const
@@ -181,28 +175,12 @@ public:
 	Position* problemOrigin;
 	list<Position*> problemGoal;
 
-	//Initial state store
-	string initNavMode;
-	double initBatPerDis;
-	string initAtPosition;
-	bool initOnDock;
-
 	//Metric booleans
 	bool distMetricDependent;
 	bool riskMetricDependent;
 	bool batteryMetricDependent;
 
-	//State variables
-	string navMode;
-	double batPerDis;
-	list<string> batModes;
-	bool onDock;
-
-	//Postion to store state during search
-	string atPosition;
-
-	Agent(string nameArg): name(nameArg), batPerDis(0),
-			navMode(""),distMetricDependent(false),
+	Agent(string nameArg): name(nameArg),distMetricDependent(false),
 			riskMetricDependent(false), batteryMetricDependent(false){}
 };
 
@@ -271,11 +249,6 @@ class pathPlanningOp
 		void storeDirectPathsPerPos();
 
 		void printDirectPathsPerPos();
-
-		//Search Queue Item Cost Calculate
-		double calculateCost(list<ActionSegment >::iterator actItr,
-				const MinimalState & theState, bool distTermActive,
-				double distCost,double gCost, string planString, bool* admissibleAction);
 
 };
 

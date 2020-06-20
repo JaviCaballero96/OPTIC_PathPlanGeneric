@@ -224,6 +224,10 @@ int main(int argc, char * argv[])
                 FF::costOptimalAStar = true;
                 break;
             }
+            case 'j': {
+                FF::distanceRiskBatteryMetric = true;
+                break;
+            }
             case 'g': {
                 RPGHeuristic::setGuidance(&(argv[argcount][2]));
                 break;
