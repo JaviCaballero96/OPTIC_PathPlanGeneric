@@ -46,7 +46,8 @@ set(optic_build_srcs
     NNF.cpp
     PreferenceHandler.cpp
     choosepreconditions.cpp
-    pathPlanningOp.cpp)
+    pathPlanningOp.cpp
+    domainAnalysis.cpp)
 
 add_library(OpticCommon STATIC ${optic_build_srcs})
 target_link_libraries(OpticCommon ParsePDDL Inst)

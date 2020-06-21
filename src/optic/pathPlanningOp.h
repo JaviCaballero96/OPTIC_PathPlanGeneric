@@ -175,6 +175,10 @@ public:
 	Position* problemOrigin;
 	list<Position*> problemGoal;
 
+	//Position
+	string atPosition;
+	string initAtPosition;
+
 	//Metric booleans
 	bool distMetricDependent;
 	bool riskMetricDependent;
@@ -249,6 +253,10 @@ class pathPlanningOp
 		void storeDirectPathsPerPos();
 
 		void printDirectPathsPerPos();
+
+		double calculateCost(list<ActionSegment >::iterator actItr,
+				const MinimalState & theState, bool distTermActive,double distCost,
+				double gCost,string planString);
 
 };
 

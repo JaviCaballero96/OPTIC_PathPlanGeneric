@@ -62,6 +62,8 @@
 #include <sstream>
 #include "temporalanalysis.h"
 
+#include "domainAnalysis.h"
+
 using std::ifstream;
 using std::cerr;
 using std::endl;
@@ -500,6 +502,9 @@ int main(int argc, char * argv[])
         usage(argv);
         exit(0);
     }
+
+    DomainAnalysis.domainRoute = argv[argc - 2];
+    DomainAnalysis.problemRoute = argv[argc - 1];
 
     #ifdef STOCHASTICDURATIONS
     solutionDeadlinePercentage = atof(argv[argcount]);

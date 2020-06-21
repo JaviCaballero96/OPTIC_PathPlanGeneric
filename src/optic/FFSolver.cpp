@@ -42,6 +42,9 @@
 #endif
 
 #include "partialordertransformer.h"
+#include <string>       // std::string
+#include <iostream>     // std::cout
+#include <sstream>      // std::stringstream
 
 #include <cfloat>
 #include <limits>
@@ -49,6 +52,10 @@
 #include <sys/times.h>
 
 #include "solver.h"
+
+#include "pathPlanningOp.h"
+
+using namespace std;
 
 namespace Planner
 {
@@ -320,6 +327,138 @@ double calculateAdmissibleCost(const MinimalState & theState, const double & mak
     }
     
     return gCost;       
+}
+
+double calculateAdmissibleCost(const MinimalState & theState, const double & makespan, const double & incomingBound,
+		const bool & verbose, list<ActionSegment >::iterator actItr, string planString)
+{
+    RPGBuilder::Metric * const theMetric = RPGBuilder::getMetric();
+
+    static const bool localDebug = true;
+
+    double gCost = 0.0;
+
+    //PathPlanning modifications
+    stringstream strStream;
+    string auxString;
+    bool distTermActive = false;
+    double distCost = 0.0;
+
+
+    if (!theMetric) {
+        // assume metric is minimise makespan
+        gCost = makespan;
+
+    } else {
+        if (!knowThatCostsAreMonotonic) {
+            NumericAnalysis::findWhetherTheMetricIsMonotonicallyWorsening();
+            knowThatCostsAreMonotonic = true;
+        }
+
+        if (NumericAnalysis::theMetricIsMonotonicallyWorsening()) {
+
+            if (localDebug) {
+                cout << "Calculating admissible cost:\n  " << gCost << endl;
+            }
+
+            gCost += theState.calculateGCost();
+
+            if (theState.lowerBoundOnTimeDependentRewardFacts) {
+                const double bestAdditionalRewardFromHere = NumericAnalysis::bestAdditionalRewardFromHere(theState);
+                if (theMetric->minimise) {
+                    gCost -= bestAdditionalRewardFromHere;
+                    if (localDebug) {
+                        cout << "+ " << -bestAdditionalRewardFromHere << " due to TDRs\n";
+                    }
+                } else {
+                    gCost += bestAdditionalRewardFromHere;
+                    if (localDebug) {
+                        cout << "+ " << bestAdditionalRewardFromHere  << " due to TDRs\n";
+                    }
+                }
+            }
+
+
+            const int pneCount = RPGBuilder::getPNECount();
+            list<int>::const_iterator vItr = theMetric->variables.begin();
+            const list<int>::const_iterator vEnd = theMetric->variables.end();
+
+            list<double>::const_iterator wItr = theMetric->weights.begin();
+            const list<double>::const_iterator wEnd = theMetric->weights.end();
+
+            for (; wItr != wEnd; ++wItr, ++vItr) {
+                if (*vItr < 0) {
+                    if (*wItr < 0.0) {
+                        if (verbose) {
+                            cout << "[Would need upper-bound on makespan]"; cout.flush();
+                        }
+                        return incomingBound;
+                    } else {
+                    	const double value = makespan * *wItr;
+                        if (localDebug) {
+                            cout << "+ " << makespan << "*" << *wItr << "  ; makespan term\n";
+                        }
+                        strStream << *(RPGBuilder::getPNE(*vItr));
+                        auxString = strStream.str();
+                        if(auxString.find("dist") != string::npos && value != 0)
+                        {
+                        	distCost += value;
+                            distTermActive = true;
+                        }
+                        gCost += value;
+                    }
+                } else if (*vItr < pneCount) {
+                    const double value = theState.secondMin[*vItr];
+                    gCost += value * *wItr;
+                    strStream << *(RPGBuilder::getPNE(*vItr));
+                    auxString = strStream.str();
+                    if(auxString.find("dist") != string::npos && value != 0)
+                    {
+                    	distCost += value * *wItr;
+                        distTermActive = true;
+                    }
+                    if (localDebug) {
+                        cout << "+ " << value << "*" << *wItr << "  ; " << *(RPGBuilder::getPNE(*vItr)) << " term\n";
+                    }
+                } else {
+                    const double value = -theState.secondMax[*vItr - pneCount];
+                    gCost += value * *wItr;
+                    strStream << *(RPGBuilder::getPNE(*vItr - pneCount));
+                    auxString = strStream.str();
+                    if(auxString.find("dist") != string::npos && value != 0)
+                    {
+                    	distCost += value * *wItr;
+                        distTermActive = true;
+                    }
+                    if (localDebug) {
+                        cout << "+ " << value << "*" << *wItr << "  ; " << *(RPGBuilder::getPNE(*vItr - pneCount)) << " term\n";
+                    }
+                }
+            }
+
+        } else {
+            return pathPlan.calculateCost(actItr,theState,distTermActive,distCost,gCost,planString);
+        }
+
+        gCost = pathPlan.calculateCost(actItr,theState,distTermActive,distCost,gCost,planString);
+
+    }
+
+   /* if (!theMetric || theMetric->minimise) {
+        if (gCost < incomingBound) {
+            gCost = incomingBound;
+        }
+    } else {
+        if (gCost > incomingBound) {
+            gCost = incomingBound;
+        }
+    }*/
+
+    if (localDebug) {
+        cout << "[" << incomingBound << "=>gCost=" << gCost << "]";
+        cout.flush();
+    }
+    return gCost;
 }
 
 bool admissibleCostExceedsBound(/*const MinimalState & theState, */const double & precalculatedAdmissibleCost, const bool & verbose)
@@ -1643,6 +1782,32 @@ public:
         }
     }
 
+    void printPlan(stringstream & s)
+	{
+		list<FFEvent>::iterator planItr = plan.begin();
+		const list<FFEvent>::iterator planEnd = plan.end();
+
+		for (int i = 0; planItr != planEnd; ++planItr, ++i) {
+			if (planItr->isDummyStep()) {
+				s << i << ": dummy step";
+			} else {
+				if (!planItr->getEffects) cout << "(( ";
+				if (planItr->action) {
+					s << i << ": " << *(planItr->action) << ", " << (planItr->time_spec == Planner::E_AT_START ? "start" : "end");
+				} else if (planItr->time_spec == Planner::E_AT) {
+					s << i << ": TIL " << planItr->divisionID;
+
+				} else {
+					s << i << ": null node!";
+					assert(false);
+				}
+				if (!planItr->getEffects) cout << " ))";
+			}
+			s << " at " << planItr->lpMinTimestamp;
+			s << "\n";
+		}
+	}
+
 };
 
 class SearchQueue
@@ -1773,7 +1938,10 @@ public:
     void insert(SearchQueueItem* p, const int category = 1) {
 
         if (FF::distanceRiskBatteryMetric) {
-            const double pCost = p->heuristicValue.admissibleCostEstimate;
+
+        	//Calculate cost of the full node
+            const double pCost = calculateNodeCost(p);
+
             list<SearchQueueItem*> & q = (category == 1 ? qOne[pCost] : qTwo[pCost]);
             
             list<SearchQueueItem*>::iterator qItr = q.begin();
@@ -1904,6 +2072,23 @@ public:
     	 {
     		 return qTwo.size();
     	 }
+    }
+
+    double calculateNodeCost(SearchQueueItem* p)
+    {
+    	stringstream planStream;
+    	string line;
+    	cout << "Calculating cost of the plan: " << endl;
+    	streambuf * old2 = cout.rdbuf(planStream.rdbuf());
+    	p->printPlan();
+    	cout.rdbuf(old2);
+
+    	while(getline(planStream,line))
+    	{
+    		cout << line << endl;
+    	}
+
+    	return p->heuristicValue.newCostEstimate;
     }
 
 };
@@ -6971,7 +7156,12 @@ Solution FF::search(bool & reachedGoal)
              {
          	   searchQueue.printSearchItems();
              }
-            auto_ptr<SearchQueueItem> currSQI(searchQueue.pop_front());
+
+            stringstream planStream;
+            SearchQueueItem* searchItem = searchQueue.pop_front();
+            searchItem->printPlan(planStream);
+            string planString = planStream.str();
+            auto_ptr<SearchQueueItem> currSQI(searchItem);
 
             cout << "SQI at " << currSQI.get() << ", EMS at " << currSQI->state() << endl;
             
@@ -7074,8 +7264,12 @@ Solution FF::search(bool & reachedGoal)
                         succ->heuristicValue.makespan = currSQI->heuristicValue.makespan;
                         
                         if (Globals::optimiseSolutionQuality) {
-                            succ->heuristicValue.admissibleCostEstimate = calculateAdmissibleCost(succ->state()->getInnerState(),succ->heuristicValue.makespan,currSQI->heuristicValue.admissibleCostEstimate,false);
-                            if (admissibleCostExceedsBound(succ->heuristicValue.admissibleCostEstimate, false)) {
+                            //succ->heuristicValue.admissibleCostEstimate = calculateAdmissibleCost(succ->state()->getInnerState(),succ->heuristicValue.makespan,currSQI->heuristicValue.admissibleCostEstimate,false);
+                            succ->heuristicValue.admissibleCostEstimate = calculateAdmissibleCost(succ->state()->getInnerState(),
+                            		succ->heuristicValue.makespan,currSQI->heuristicValue.admissibleCostEstimate,
+									false,helpfulActsItr,planString);
+                            succ->heuristicValue.newCostEstimate = succ->heuristicValue.admissibleCostEstimate;
+                        	if (admissibleCostExceedsBound(succ->heuristicValue.admissibleCostEstimate, false)) {
                                 ++statesDiscardedAsTooExpensiveBeforeHeuristic;
                                 tsSound = false;
                             }
@@ -7098,8 +7292,12 @@ Solution FF::search(bool & reachedGoal)
                         succ->heuristicValue.makespan = currSQI->heuristicValue.makespan;
                         
                         if (Globals::optimiseSolutionQuality) {
-                            succ->heuristicValue.admissibleCostEstimate = calculateAdmissibleCost(succ->state()->getInnerState(),succ->heuristicValue.makespan,currSQI->heuristicValue.admissibleCostEstimate,false);
-                            if (admissibleCostExceedsBound(succ->heuristicValue.admissibleCostEstimate, false)) {
+                            //succ->heuristicValue.admissibleCostEstimate = calculateAdmissibleCost(succ->state()->getInnerState(),succ->heuristicValue.makespan,currSQI->heuristicValue.admissibleCostEstimate,false);
+                            succ->heuristicValue.admissibleCostEstimate = calculateAdmissibleCost(succ->state()->getInnerState(),
+                            		succ->heuristicValue.makespan,currSQI->heuristicValue.admissibleCostEstimate,
+									false,helpfulActsItr,planString);
+                            succ->heuristicValue.newCostEstimate = succ->heuristicValue.admissibleCostEstimate;
+                        	if (admissibleCostExceedsBound(succ->heuristicValue.admissibleCostEstimate, false)) {
                                 ++statesDiscardedAsTooExpensiveBeforeHeuristic;
                                 tsSound = false;
                             }

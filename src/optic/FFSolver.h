@@ -306,6 +306,7 @@ public:
         double makespan;        
         double makespanEstimate;
         double admissibleCostEstimate;
+        double newCostEstimate;
         double qbreak;        
         
 #ifndef NDEBUG

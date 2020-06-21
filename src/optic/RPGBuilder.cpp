@@ -58,6 +58,7 @@
 #include "PreferenceHandler.h"
 
 #include "pathPlanningOp.h"
+#include "domainAnalysis.h"
 
 #ifdef STOCHASTICDURATIONS
 #include "StochasticDurations.h"
@@ -3166,7 +3167,12 @@ void RPGBuilder::initialise()
     }
     if (RPGdebug && Globals::globalVerbosity & 65536) instantiatedOp::writeAllPNEs(cout);
     
-    //PNEs: Functions expanded with all possible values of its parameters
+    //Domain Analysis module plan
+    DomainAnalysis.readDomainActions();
+    DomainAnalysis.readDomainPredicates();
+    DomainAnalysis.readDomainFunctions();
+
+    //PathPlan Module Actions
     pathPlan.createPathPlanRoutes(instantiatedOp::opsBegin(),instantiatedOp::opsEnd(),
 			instantiatedOp::pnesBegin(),instantiatedOp::pnesEnd());
     cout << current_analysis->the_problem->domain_name << endl;

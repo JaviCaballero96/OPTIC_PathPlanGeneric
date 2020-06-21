@@ -365,6 +365,7 @@ void pathPlanningOp::searchOrigin(stringstream & effectStream)
 	string line, agentArgument = "", locArgument = "";
 	bool storeAgent = false;
 	bool storeRisk = false;
+	bool storeGoal = false;
     while (getline(effectStream, line)) {
         //cout << line << endl;
 		if(line.find("(prop)") != string::npos || line.find("(func_term)") != string::npos)
@@ -382,6 +383,13 @@ void pathPlanningOp::searchOrigin(stringstream & effectStream)
 			}else
 			{
 				storeAgent = false;
+			}
+			if(line.find("robotbase_at") != string::npos)
+			{
+				storeGoal = true;
+			}else
+			{
+				storeGoal = false;
 			}
 			if(line.find("posrisk") != string::npos)
 			{
@@ -439,6 +447,35 @@ void pathPlanningOp::searchOrigin(stringstream & effectStream)
 					if(type.find("loc") != string::npos)
 					{
 						locArgument = arg;
+					}
+					if(arg.find("c") != string::npos &&
+							arg.find("_") != string::npos &&
+							type.find("loc") != string::npos &&
+							storeGoal)
+					{
+						storeGoal = false;
+						if(agentArgument == "")
+						{
+							problemOrigin.x = arg.substr(arg.find("c")+1,arg.find("_")-1);
+							problemOrigin.y = arg.substr(arg.find("_")+1,arg.length());
+						}else
+						{
+							list<Agent*>::iterator agentIt = agents.begin();
+							for(;agentIt != agents.end();agentIt++)
+							{
+								if((*agentIt)->name == agentArgument)
+								{
+									Position* posAux = new Position();
+									posAux->x = arg.substr(arg.find("c")+1,arg.find("_")-1);
+									posAux->y = arg.substr(arg.find("_")+1,arg.length());
+									(*agentIt)->problemOrigin = posAux;
+									(*agentIt)->initAtPosition = arg;
+								}
+							}
+							agentArgument = "";
+							locArgument = "";
+						}
+
 					}
 					else if(arg.find("c") != string::npos &&
 						arg.find("_") != string::npos &&
@@ -917,6 +954,246 @@ DijkstraPath::DijkstraPath(DijkstraPath* dPath, pathObj* path)
 	this->path = new pathObj(dPath->path->getOrigin(),path->getGoal(),-1);
 
 	this->cost = dPath->cost + path->getCost();
+}
+
+double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
+		const MinimalState & theState, bool distTermActive,double distCost,
+		double gCost,string planString)
+{
+	stringstream auxStream;
+	string actionString;
+	string strOr, strGo, line, agentName="";
+	list<string> alreadyVisited;
+	double costOpticDistanceFree = 0, minCost = 99999;
+	double riskCost = 0, pathCost= 0, batteryCost = 0;
+	bool riskActionDependent = false;
+	string goalChoosed;
+	Agent *agent;
+	istringstream planStream(planString);
+
+	cout << "Considering action: " << *(actItr->first) << endl;
+	cout << "In the state: " << endl;
+
+	//Reset agents state
+	list<Agent*>::iterator agentIt = agents.begin();
+	for(;agentIt != agents.end(); agentIt++)
+	{
+		(*agentIt)->atPosition = (*agentIt)->initAtPosition;
+	}
+	//Read current plan
+
+	while(getline(planStream, line))
+	{
+		cout << line << endl;
+		string action;
+		if(line.find("robotbase_goingto") != string::npos
+				&& line.find("end") != string::npos)
+		{
+			Agent* actionAgent = NULL;
+			action = line;
+	    	do
+	    	{
+	    		string argument = action.substr(0, action.find(" "));
+	    		action = action.substr(action.find(" ")+1, action.length());
+
+	    		agentIt = agents.begin();
+				for(;agentIt != agents.end() && actionAgent == NULL; agentIt++)
+				{
+					if(argument.find((*agentIt)->name) != string::npos)
+					{
+						actionAgent = *agentIt;
+						break;
+					}
+				}
+	    	}
+	    	while(strcmp(action.substr(0, 1).c_str(),"c"));
+
+	    	string strOrigin = action.substr(0, action.find(" "));
+	    	action = action.substr(action.find(" ")+1, action.length());
+	    	string strGoal = action.substr(0, action.find(" "));
+
+	    	if(strGoal.find(")") != string::npos)
+	    	{
+	    		strGoal = strGoal.substr(0, strGoal.find(")"));
+	    	}
+
+	    	actionAgent->atPosition = strGoal;
+	    	alreadyVisited.push_back(strGoal);
+		}
+	}
+
+	auxStream << *(actItr->first);
+	actionString = auxStream.str();
+	auxStream.str("");
+
+	//If the action is movement
+	if(actionString.find("robotbase_goingto") != string::npos)
+	{
+		//Distance metric
+
+		cout << "Considering applying a pathplanning op" <<  endl;
+		riskActionDependent = true;
+
+    	do
+    	{
+    		string argument = actionString.substr(0, actionString.find(" "));
+    		actionString = actionString.substr(actionString.find(" ")+1, actionString.length());
+    		list<Agent*>::iterator agentIt;
+    		agentIt = agents.begin();
+    		for(;agentIt != agents.end() && agentName == ""; agentIt++)
+    		{
+    			if(argument.find((*agentIt)->name) != string::npos)
+    			{
+    				agentName = (*agentIt)->name;
+    				agent = (*agentIt);
+    			}
+    		}
+    	}
+    	while(strcmp(actionString.substr(0, 1).c_str(),"c"));
+
+    	strOr = actionString.substr(0, actionString.find(" "));
+    	actionString = actionString.substr(actionString.find(" ")+1, actionString.length());
+    	string strGo = actionString.substr(0, actionString.find(" "));
+    	if(strGo.find(")") != string::npos)
+    	{
+    	    strGo = strGo.substr(0, strGo.length()-1);
+    	}
+
+    	cout << "from " << strOr << " to " << strGo << endl;
+
+    	pathObj *directPath = find(strOr, strGo);
+    	if(directPath == NULL)
+    	{
+    		cout << "Error obtaining direct path" << endl;
+    		return -1;
+    	}
+
+    	cout << "Optic cost = " << gCost << " and distance = " <<  directPath->getCost() << endl;
+    	if(agent->distMetricDependent && gCost != 0)
+    	{
+    		costOpticDistanceFree = gCost - directPath->getCost();
+    	}else{
+    		costOpticDistanceFree = gCost;
+    	}
+
+    	//Iterate over agent dependent objectives
+    	list<Position*>::iterator posIt = agent->problemGoal.begin();
+    	for(; posIt != agent->problemGoal.end(); posIt++)
+    	{
+    		string strProblemGoal = "c" + (*posIt)->x + "_" + (*posIt)->y;
+        	if(std::find(alreadyVisited.begin(), alreadyVisited.end(), strGo) != alreadyVisited.end())
+        	{
+        		cout << "Skyping" << strProblemGoal << " goal, already visited." << endl;
+        		continue;
+        	}
+
+			DijkstraPath *dijksPath = findShortPath(strGo,strProblemGoal);
+			if(dijksPath == NULL)
+			{
+				cout << "Error obtaining short path" << endl;
+				return -1;
+			}
+
+			if(dijksPath->cost < minCost)
+			{
+				goalChoosed = strProblemGoal;
+				minCost = dijksPath->cost;
+			}
+    	}
+
+    	//Iterate over common objectives
+    	posIt = commonProblemGoal.begin();
+    	for(; posIt != commonProblemGoal.end(); posIt++)
+    	{
+    		string strProblemGoal = "c" + (*posIt)->x + "_" + (*posIt)->y;
+        	if(std::find(alreadyVisited.begin(), alreadyVisited.end(), strProblemGoal) != alreadyVisited.end())
+        	{
+        		cout << "Skyping " << strProblemGoal << " goal, already visited." << endl;
+        		continue;
+        	}
+
+			DijkstraPath *dijksPath = findShortPath(strGo,strProblemGoal);
+			if(dijksPath == NULL)
+			{
+				cout << "Error obtaining short path" << endl;
+				return -1;
+			}
+
+			if(dijksPath->cost < minCost)
+			{
+				goalChoosed = strProblemGoal;
+				minCost = dijksPath->cost;
+			}
+    	}
+
+
+    	cout << "Distance from proposed new position to goal " << goalChoosed << " = " << minCost << endl;
+
+    	if(agent->distMetricDependent && this->distMetricActive)
+    	{
+    		gCost = costOpticDistanceFree+ minCost + directPath->getCost() / 2;
+    		pathCost = minCost + directPath->getCost() / 2;
+    	}else if(this->distMetricActive)
+    	{
+    		gCost = costOpticDistanceFree + minCost;
+    		pathCost = minCost;
+    	}
+
+    	// Risk metric
+    	if(agent->riskMetricDependent && riskActionDependent)
+    	{
+    		//Risk associated to the new position
+	    	list<Position>::iterator possIt = positionList.begin();
+	    	for(; possIt != positionList.end(); possIt++)
+	    	{
+	    		string strPos = "c" + possIt->x + "_" + possIt->y;
+	    		if(strPos == strGo)
+	    		{
+	    			riskCost = possIt->risk;
+	    			break;
+	    		}
+	    	}
+    	}
+
+    	if(this->riskMetricActive && riskActionDependent){
+
+	    	//Risk associated to distance between agents
+	    	list<Agent*>::iterator agentIt = agents.begin();
+			for(;agentIt != agents.end(); agentIt++)
+			{
+				if((*agentIt)->name == agent->name)
+					continue;
+
+				pathObj *directPath = NULL;
+				if((*agentIt)->atPosition != "")
+				{
+					directPath = find((*agentIt)->atPosition, strGo);
+				}else
+				{
+					string strOriAgent = "c" + (*agentIt)->problemOrigin->x + "_" + (*agentIt)->problemOrigin->y;
+					directPath = find(strOriAgent, strGo);
+				}
+
+				if(directPath == NULL)
+				{
+					riskCost += 0;
+				}
+				else if(directPath->getCost() < 10)
+				{
+					riskCost += 0;
+				}
+			}
+
+    	}
+
+    	gCost += riskCost;
+
+    	cout << "PathPlan Operation New Cost is = " << gCost << endl;
+
+	}
+
+	return gCost;
+    //return normalizeCost(gCost, pathCost, riskCost, batteryCost);
 }
 
 double pathPlanningOp::normalizeCost(double gCost, double pathCost,
