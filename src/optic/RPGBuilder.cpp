@@ -3168,9 +3168,12 @@ void RPGBuilder::initialise()
     if (RPGdebug && Globals::globalVerbosity & 65536) instantiatedOp::writeAllPNEs(cout);
     
     //Domain Analysis module plan
-    DomainAnalysis.readDomainActions();
     DomainAnalysis.readDomainPredicates();
     DomainAnalysis.readDomainFunctions();
+    DomainAnalysis.readDomainActions();
+    DomainAnalysis.readProblemObjects();
+    DomainAnalysis.readProblemMetric();
+    DomainAnalysis.readProblemGoal();
 
     //PathPlan Module Actions
     pathPlan.createPathPlanRoutes(instantiatedOp::opsBegin(),instantiatedOp::opsEnd(),

@@ -30,27 +30,35 @@ using std::ostringstream;
 using std::endl;
 using std::ifstream;
 
-class actionAnalysis {
-public :
-	string name;
-	list<string> arguments;
-	list<string> argumentType;
-
-	bool isMetricDependent;
-
-	actionAnalysis(string AName): name(AName), isMetricDependent(false)
-		{}
-
-};
-
 class predicateAnalysis {
 public :
 	string name;
 	list<string> arguments;
 	list<string> argumentType;
 
-	predicateAnalysis(string AName): name(AName)
+	//Values, only used in goal
+	list<string> argumentValue;
+	//Negated, goal and actions
+	bool negated;
+
+	predicateAnalysis(string AName): name(AName), negated(false)
 		{}
+
+	predicateAnalysis(predicateAnalysis* predicate): negated(false)
+	{
+		this->name = predicate->name;
+		list<string>::iterator strIt = predicate->arguments.begin();
+		for(; strIt != predicate->arguments.end(); strIt++)
+		{
+			this->arguments.push_back(*strIt);
+		}
+
+		strIt = predicate->argumentType.begin();
+		for(; strIt != predicate->argumentType.end(); strIt++)
+		{
+			this->argumentType.push_back(*strIt);
+		}
+	}
 
 };
 
@@ -60,9 +68,80 @@ public :
 	list<string> arguments;
 	list<string> argumentType;
 
-	functionAnalysis(string AName): name(AName)
+	//Values, only used in metrics
+	list<string> argumentValue;
+	//Increase or decrease, actions
+	bool increase;
+
+	functionAnalysis(): name(""), increase(true)
 		{}
 
+	functionAnalysis(string AName): name(AName), increase(true)
+		{}
+
+	functionAnalysis(functionAnalysis *function)
+	{
+		this->name = function->name;
+		this->increase = function->increase;
+
+		list<string>::iterator strIt = function->arguments.begin();
+		for(; strIt != function->arguments.end(); strIt++)
+		{
+			this->arguments.push_back(*strIt);
+		}
+
+		strIt = function->argumentType.begin();
+		for(; strIt != function->argumentType.end(); strIt++)
+		{
+			this->argumentType.push_back(*strIt);
+		}
+	}
+};
+
+class funcOperation {
+public :
+	functionAnalysis* function;
+	list<functionAnalysis*> operators;
+	list<double> weight;
+
+	bool increase;
+};
+
+class actionAnalysis {
+public :
+	string name;
+	list<string> arguments;
+	list<string> argumentType;
+
+	bool isMetricDependent;
+
+	list<predicateAnalysis*> precondPred;
+	list<functionAnalysis*> precondFunc;
+
+	list<predicateAnalysis*> effectsPred;
+	list<funcOperation*> effectsFuncOp;
+
+	actionAnalysis(string AName): name(AName), isMetricDependent(false)
+		{}
+
+};
+
+class objectTypeAnalysis {
+public :
+	string name;
+	list<string> instances;
+};
+
+class metricAnalysis {
+public :
+	list<functionAnalysis*> functions;
+	list<double> weight;
+	bool minimise;
+};
+
+class goalAnalysis {
+public :
+	list<predicateAnalysis*> predicates;
 };
 
 class domainAnalysis
@@ -75,10 +154,21 @@ public:
     list<actionAnalysis*> actionList;
     list<predicateAnalysis*> predicateList;
     list<functionAnalysis*> functionList;
+    list<objectTypeAnalysis*> objectList;
+    metricAnalysis metric;
+    goalAnalysis goal;
 
 	void readDomainActions();
 	void readDomainPredicates();
 	void readDomainFunctions();
+	void readProblemObjects();
+	void readProblemMetric();
+	void readProblemGoal();
+
+private:
+	functionAnalysis* findFunction(string argName);
+	void readDomainActPrecond(ifstream* domainStream);
+	void readDomainActEffects(ifstream* domainStream);
 
 };
 
