@@ -158,12 +158,16 @@ public:
     metricAnalysis metric;
     goalAnalysis goal;
 
+    //Read info functions
 	void readDomainActions();
 	void readDomainPredicates();
 	void readDomainFunctions();
 	void readProblemObjects();
 	void readProblemMetric();
 	void readProblemGoal();
+
+	//Analysis functions
+	void findMetricDependentActions();
 
 private:
 	functionAnalysis* findFunction(string argName);

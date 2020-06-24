@@ -506,6 +506,50 @@ void domainAnalysis::readProblemGoal()
 	}
 }
 
+//ANALYSY FUNCTIONS
+
+void domainAnalysis::findMetricDependentActions()
+{
+
+	list<functionAnalysis*>::iterator funcIt = this->metric.functions.begin();
+	for(; funcIt != this->metric.functions.end(); funcIt++)
+	{
+		list<actionAnalysis*>::iterator actIt = this->actionList.begin();
+		for(; actIt != this->actionList.end(); actIt++)
+		{
+			list<funcOperation*>::iterator funcOpIt = (*actIt)->effectsFuncOp.begin();
+			for(; funcOpIt != (*actIt)->effectsFuncOp.end(); funcOpIt++)
+			{
+				if((*funcOpIt)->function->name == (*funcIt)->name &&
+						!((*actIt)->isMetricDependent))
+				{
+					if((*funcOpIt)->function->argumentType.size() ==
+							(*funcIt)->argumentType.size())
+					{
+						list<string>::iterator strIt1 = (*funcOpIt)->function->argumentType.begin();
+						list<string>::iterator strIt2 = (*funcIt)->argumentType.begin();
+						bool argumentsEqual = true;
+						for(; strIt1 != (*funcOpIt)->function->argumentType.end(); strIt1++)
+						{
+							if(*strIt1 != *strIt2)
+							{
+								argumentsEqual = false;
+							}
+						}
+
+						if(argumentsEqual)
+						{
+							(*actIt)->isMetricDependent = true;
+						}
+					}
+
+				}
+			}
+		}
+	}
+
+}
+
 //PRIVATE FUNCTIONS
 
 functionAnalysis* domainAnalysis::findFunction(string argName)
