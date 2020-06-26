@@ -550,6 +550,21 @@ void domainAnalysis::findMetricDependentActions()
 
 }
 
+//PLANNING INFO FUNCTIONS
+bool domainAnalysis::isMetricDependent(string action)
+{
+	list<actionAnalysis*>::iterator actIt = actionList.begin();
+	for(; actIt != actionList.end(); actIt++)
+	{
+		if((*actIt)->name == action)
+		{
+			return (*actIt)->isMetricDependent;
+		}
+	}
+
+	return false;
+}
+
 //PRIVATE FUNCTIONS
 
 functionAnalysis* domainAnalysis::findFunction(string argName)

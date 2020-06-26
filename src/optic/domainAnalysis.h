@@ -158,6 +158,9 @@ public:
     metricAnalysis metric;
     goalAnalysis goal;
 
+    //Planning info functions
+    bool isMetricDependent(string action);
+
     //Read info functions
 	void readDomainActions();
 	void readDomainPredicates();

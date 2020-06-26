@@ -54,6 +54,7 @@
 #include "solver.h"
 
 #include "pathPlanningOp.h"
+#include "domainAnalysis.h"
 
 using namespace std;
 
@@ -2083,12 +2084,23 @@ public:
     	p->printPlan();
     	cout.rdbuf(old2);
 
+    	double cost = p->heuristicValue.newCostEstimate;
+
     	while(getline(planStream,line))
     	{
-    		cout << line << endl;
+    		if(line.find(" end at") != string::npos)
+    		{
+				cout << line << endl;
+				string action = line.substr(line.find("(") + 1, line.length());
+				action = action.substr(0,action.find(" "));
+				if(!(DomainAnalysis.isMetricDependent(action)))
+				{
+					cost = cost + 1;
+				}
+    		}
     	}
 
-    	return p->heuristicValue.newCostEstimate;
+    	return cost;
     }
 
 };
