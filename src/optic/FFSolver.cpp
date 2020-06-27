@@ -2097,6 +2097,11 @@ public:
 				{
 					cost = cost + 1;
 				}
+
+				if(DomainAnalysis.isGoalAction(action))
+				{
+					cost = cost/2;
+				}
     		}
     	}
 

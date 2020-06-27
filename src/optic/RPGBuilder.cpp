@@ -3177,7 +3177,10 @@ void RPGBuilder::initialise()
     DomainAnalysis.readProblemGoal();
 
     //Analysis
+    DomainAnalysis.analyseActions();
     DomainAnalysis.findMetricDependentActions();
+    DomainAnalysis.findGoalActions();
+    DomainAnalysis.analyseGoalActions();
 
     //PathPlan Module Actions
     pathPlan.createPathPlanRoutes(instantiatedOp::opsBegin(),instantiatedOp::opsEnd(),

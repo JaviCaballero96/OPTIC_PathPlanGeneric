@@ -510,7 +510,8 @@ void domainAnalysis::readProblemGoal()
 
 void domainAnalysis::findMetricDependentActions()
 {
-
+	//Iterate over actions and predicates in metric, searching for effects
+	//functions in actions that affect functions in metric
 	list<functionAnalysis*>::iterator funcIt = this->metric.functions.begin();
 	for(; funcIt != this->metric.functions.end(); funcIt++)
 	{
@@ -535,6 +536,7 @@ void domainAnalysis::findMetricDependentActions()
 							{
 								argumentsEqual = false;
 							}
+							strIt2++;
 						}
 
 						if(argumentsEqual)
@@ -542,13 +544,148 @@ void domainAnalysis::findMetricDependentActions()
 							(*actIt)->isMetricDependent = true;
 						}
 					}
-
 				}
 			}
 		}
 	}
+}
+
+void domainAnalysis::findGoalActions()
+{
+	//Search for actions whose effects are predicates in the goal
+	list<predicateAnalysis*>::iterator predIt = this->goal.predicates.begin();
+	for(; predIt != this->goal.predicates.end(); predIt++)
+	{
+	    list<actionAnalysis*>::iterator actIt = actionList.begin();
+	    for(; actIt != actionList.end(); actIt++)
+	    {
+	    	list<predicateAnalysis*>::iterator effectIt = (*actIt)->effectsPred.begin();
+	    	for(; effectIt != (*actIt)->effectsPred.end(); effectIt++)
+			{
+		    	if((*predIt)->name == (*effectIt)->name &&
+		    			!((*actIt)->isGoalAction))
+		    	{
+					if((*predIt)->argumentType.size() ==
+							(*effectIt)->argumentType.size())
+					{
+						list<string>::iterator strIt1 = (*predIt)->argumentType.begin();
+						list<string>::iterator strIt2 = (*effectIt)->argumentType.begin();
+						bool argumentsEqual = true;
+						for(; strIt1 != (*predIt)->argumentType.end(); strIt1++)
+						{
+							if(*strIt1 != *strIt2)
+							{
+								argumentsEqual = false;
+							}
+							strIt2++;
+						}
+
+						if(argumentsEqual)
+						{
+							(*actIt)->isGoalAction = true;
+						}
+					}
+		    	}
+			}
+	    }
+	}
+}
+
+void domainAnalysis::analyseGoalActions()
+{
 
 }
+
+void domainAnalysis::analyseActions()
+{
+	//Iterate over action effects, try to find changes in parameters and delete not useful conditions
+    list<actionAnalysis*>::iterator actIt = actionList.begin();
+    for(; actIt != actionList.end(); actIt++)
+    {
+    	list<int> deletionList;
+    	int index = 0;
+
+    	list<predicateAnalysis*>::iterator effectIt = (*actIt)->effectsPred.begin();
+    	for(; effectIt != (*actIt)->effectsPred.end(); effectIt++)
+		{
+    		//For each predicate effect, search for predicates with the same name and arguments
+    		int index2 = 0;
+        	list<predicateAnalysis*>::iterator effectIt2 = (*actIt)->effectsPred.begin();
+        	for(; effectIt2 != (*actIt)->effectsPred.end(); effectIt2++)
+    		{
+        		cout << (*effectIt)->name << "|" << index << (*effectIt2)->name << "|" << index2 << endl;
+        		if(index != index2 &&
+        				(*effectIt)->name == (*effectIt2)->name &&
+						!(std::find(deletionList.begin(), deletionList.end(), index) != deletionList.end()) &&
+						!(std::find(deletionList.begin(), deletionList.end(), index2) != deletionList.end()))
+        		{
+        			if((*effectIt)->argumentType.size() ==
+        										(*effectIt2)->argumentType.size())
+					{
+						list<string>::iterator strIt1 = (*effectIt)->argumentType.begin();
+						list<string>::iterator strIt2 = (*effectIt2)->argumentType.begin();
+						bool argumentsEqual = true;
+						for(; strIt1 != (*effectIt)->argumentType.end(); strIt1++)
+						{
+							if(*strIt1 != *strIt2)
+							{
+								argumentsEqual = false;
+							}
+							strIt2++;
+						}
+
+						if(argumentsEqual)
+						{
+							cout << (*effectIt)->name << " effect in " << (*actIt)->name << ":" << endl;
+
+							//We now know the same predicate is affected twice in the action.
+							//This can mean that it changes some variable state,
+							//it adds some variable state or it's internal control (not useful).
+							list<string>::iterator strIt1 = (*effectIt)->arguments.begin();
+							list<string>::iterator strIt2 = (*effectIt2)->arguments.begin();
+							list<string>::iterator strIt = (*effectIt2)->argumentType.begin();
+							bool argumentsEqual2 = true;
+							for(; strIt1 != (*effectIt)->arguments.end(); strIt1++)
+							{
+								if(*strIt1 != *strIt2)
+								{
+									cout << "	Argument " << (*strIt) << " changes." << endl;
+									argumentsEqual2 = false;
+								}else
+								{
+									cout << "	Argument " << (*strIt) << " is the same." << endl;
+								}
+
+								strIt2++;
+								strIt++;
+							}
+
+							if(argumentsEqual2)
+							{
+								cout << "	They will be deleted." << endl;
+								//If the arguments are the same, then these effects can be deleted.
+								//Since they do not express information aboun the domain.
+								deletionList.push_back(index);
+								deletionList.push_back(index2);
+							}
+						}
+					}
+        		}
+        		index2++;
+    		}
+        	index++;
+		}
+
+    	list<int>::iterator delIt = deletionList.begin();
+    	for(; delIt != deletionList.end(); delIt++)
+    	{
+    		list<predicateAnalysis*>::iterator predIt = (*actIt)->effectsPred.begin();
+    	    std::advance (predIt,*delIt);
+    		(*actIt)->effectsPred.erase(predIt);
+    	}
+    }
+}
+
 
 //PLANNING INFO FUNCTIONS
 bool domainAnalysis::isMetricDependent(string action)
@@ -559,6 +696,20 @@ bool domainAnalysis::isMetricDependent(string action)
 		if((*actIt)->name == action)
 		{
 			return (*actIt)->isMetricDependent;
+		}
+	}
+
+	return false;
+}
+
+bool domainAnalysis::isGoalAction(string action)
+{
+	list<actionAnalysis*>::iterator actIt = actionList.begin();
+	for(; actIt != actionList.end(); actIt++)
+	{
+		if((*actIt)->name == action)
+		{
+			return (*actIt)->isGoalAction;
 		}
 	}
 
@@ -636,10 +787,9 @@ void domainAnalysis::readDomainActEffects(ifstream *domainStream)
 		for(; predIt != predicateList.end(); predIt++)
 		{
 			if(line.find((*predIt)->name) != string::npos &&
-					line.find("duration") == string::npos &&
-					line.find("at end") != string::npos)
+					line.find("duration") == string::npos)
 			{
-				line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
+				//line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
 				actionAnalysis* actIt = actionList.back();
 				predicateAnalysis *predAux = new predicateAnalysis(*predIt);
 
@@ -647,6 +797,28 @@ void domainAnalysis::readDomainActEffects(ifstream *domainStream)
 				{
 					predAux->negated = true;
 				}
+
+				line = line.substr(line.find((*predIt)->name) + (*predIt)->name.length(), line.length());
+
+				list<string>::iterator strIt = predAux->arguments.begin();
+				istringstream lineStream(line);
+				string word;
+				while(lineStream >> word)
+				{
+					while(word.find("(") != string::npos)
+					{
+						word = word.substr(word.find("(") + 1, word.length());
+					}
+					while(word.find(")") != string::npos)
+					{
+						word = word.substr(0, word.find(")"));
+					}
+
+					(*strIt) = word.substr(1,word.length());
+					strIt++;
+				}
+
+
 				actIt->effectsPred.push_back(predAux);
 				break;
 			}

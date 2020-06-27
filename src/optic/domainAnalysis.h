@@ -114,6 +114,7 @@ public :
 	list<string> argumentType;
 
 	bool isMetricDependent;
+	bool isGoalAction;
 
 	list<predicateAnalysis*> precondPred;
 	list<functionAnalysis*> precondFunc;
@@ -121,7 +122,7 @@ public :
 	list<predicateAnalysis*> effectsPred;
 	list<funcOperation*> effectsFuncOp;
 
-	actionAnalysis(string AName): name(AName), isMetricDependent(false)
+	actionAnalysis(string AName): name(AName), isMetricDependent(false), isGoalAction(false)
 		{}
 
 };
@@ -160,6 +161,7 @@ public:
 
     //Planning info functions
     bool isMetricDependent(string action);
+    bool isGoalAction(string action);
 
     //Read info functions
 	void readDomainActions();
@@ -170,7 +172,10 @@ public:
 	void readProblemGoal();
 
 	//Analysis functions
+	void analyseActions();
 	void findMetricDependentActions();
+	void findGoalActions();
+	void analyseGoalActions();
 
 private:
 	functionAnalysis* findFunction(string argName);
