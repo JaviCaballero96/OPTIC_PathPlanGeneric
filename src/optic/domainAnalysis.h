@@ -113,8 +113,17 @@ public :
 	list<string> arguments;
 	list<string> argumentType;
 
+	//Boolean that indicates if this action will be used to optimize the metric
 	bool isMetricDependent;
+
+	//Boolean that indicates if this action will set a goal predicate
 	bool isGoalAction;
+	list<int> indexPredGoal;
+
+	//Boolean that indicates if this action will set a goal predicate that blocks metric actions
+	bool isFinalStateGoalAction;
+	//Boolean that indicates if this action sets a predicate that must precede a goal action
+	bool isRequiredGoalAction;
 
 	list<predicateAnalysis*> precondPred;
 	list<functionAnalysis*> precondFunc;
@@ -122,7 +131,8 @@ public :
 	list<predicateAnalysis*> effectsPred;
 	list<funcOperation*> effectsFuncOp;
 
-	actionAnalysis(string AName): name(AName), isMetricDependent(false), isGoalAction(false)
+	actionAnalysis(string AName): name(AName), isMetricDependent(false), isGoalAction(false),
+			isFinalStateGoalAction(false), isRequiredGoalAction(false)
 		{}
 
 };
@@ -160,6 +170,7 @@ public:
     goalAnalysis goal;
 
     //Planning info functions
+    actionAnalysis* getAction(string action);
     bool isMetricDependent(string action);
     bool isGoalAction(string action);
 

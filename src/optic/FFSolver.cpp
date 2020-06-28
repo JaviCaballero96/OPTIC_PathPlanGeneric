@@ -2085,6 +2085,7 @@ public:
     	cout.rdbuf(old2);
 
     	double cost = p->heuristicValue.newCostEstimate;
+    	int goalsSatisfied = 0;
 
     	while(getline(planStream,line))
     	{
@@ -2093,14 +2094,22 @@ public:
 				cout << line << endl;
 				string action = line.substr(line.find("(") + 1, line.length());
 				action = action.substr(0,action.find(" "));
-				if(!(DomainAnalysis.isMetricDependent(action)))
+				actionAnalysis *actAnalysis = DomainAnalysis.getAction(action);
+				if(!(actAnalysis->isMetricDependent))
 				{
 					cost = cost + 1;
 				}
 
-				if(DomainAnalysis.isGoalAction(action))
+				if(actAnalysis->isGoalAction)
 				{
-					cost = cost/2;
+					if(actAnalysis->isFinalStateGoalAction)
+					{
+						//cost = cost + DomainAnalysis.goal.predicates.size() - goalsSatisfied;
+					}else
+					{
+						cost = cost / 2;
+						goalsSatisfied++;
+					}
 				}
     		}
     	}
@@ -7168,6 +7177,11 @@ Solution FF::search(bool & reachedGoal)
                     exit(2);
                 }
             }
+
+   	    	if(reachedGoal == true)
+   	    	{
+   	    		return workingBestSolution;
+   	    	}
 
             if(Globals::globalVerbosity & 10)
              {

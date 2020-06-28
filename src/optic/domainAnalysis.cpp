@@ -559,10 +559,12 @@ void domainAnalysis::findGoalActions()
 	    list<actionAnalysis*>::iterator actIt = actionList.begin();
 	    for(; actIt != actionList.end(); actIt++)
 	    {
+	    	int index = 0;
 	    	list<predicateAnalysis*>::iterator effectIt = (*actIt)->effectsPred.begin();
 	    	for(; effectIt != (*actIt)->effectsPred.end(); effectIt++)
 			{
 		    	if((*predIt)->name == (*effectIt)->name &&
+		    			(*predIt)->negated == (*effectIt)->negated &&
 		    			!((*actIt)->isGoalAction))
 		    	{
 					if((*predIt)->argumentType.size() ==
@@ -583,9 +585,11 @@ void domainAnalysis::findGoalActions()
 						if(argumentsEqual)
 						{
 							(*actIt)->isGoalAction = true;
+							(*actIt)->indexPredGoal.push_back(index);
 						}
 					}
 		    	}
+		    	index++;
 			}
 	    }
 	}
@@ -593,6 +597,53 @@ void domainAnalysis::findGoalActions()
 
 void domainAnalysis::analyseGoalActions()
 {
+	//This fuuction tries to find which objectives have to be set
+	//during the execution and which should wait until the end to be set.
+
+	list<actionAnalysis*>::iterator actIt = this->actionList.begin();
+	for(; actIt != this->actionList.end(); actIt++)
+	{
+		if((*actIt)->isGoalAction)
+		{
+			int index = 0;
+			list<predicateAnalysis*>::iterator efActIt = (*actIt)->effectsPred.begin();
+			for(; efActIt != (*actIt)->effectsPred.end(); efActIt++)
+			{
+				list<actionAnalysis*>::iterator actIt2 = this->actionList.begin();
+				for(; actIt2 != this->actionList.end(); actIt2++)
+					if((*actIt2)->isMetricDependent)
+					{
+						list<predicateAnalysis*>::iterator precondActIt = (*actIt2)->precondPred.begin();
+						for(; precondActIt != (*actIt2)->precondPred.end(); precondActIt++)
+						{
+							if((*efActIt)->name == (*precondActIt)->name &&
+									(*efActIt)->negated == (*precondActIt)->negated &&
+									(*efActIt)->arguments.size() == (*precondActIt)->arguments.size())
+							{
+								list<string>::iterator strIt1 = (*efActIt)->argumentType.begin();
+								list<string>::iterator strIt2 = (*precondActIt)->argumentType.begin();
+								bool argumentsEqual = true;
+								for(; strIt1 != (*efActIt)->argumentType.end(); strIt1++)
+								{
+									if(*strIt1 != *strIt2)
+									{
+										argumentsEqual = false;
+									}
+									strIt2++;
+								}
+
+								if(argumentsEqual)
+								{
+									(*actIt)->isFinalStateGoalAction = true;
+								}
+							}
+						}
+					}
+
+				index++;
+			}
+		}
+	}
 
 }
 
@@ -676,8 +727,9 @@ void domainAnalysis::analyseActions()
         	index++;
 		}
 
-    	list<int>::iterator delIt = deletionList.begin();
-    	for(; delIt != deletionList.end(); delIt++)
+    	deletionList.sort();
+    	list<int>::reverse_iterator delIt = deletionList.rbegin();
+    	for(; delIt != deletionList.rend(); delIt++)
     	{
     		list<predicateAnalysis*>::iterator predIt = (*actIt)->effectsPred.begin();
     	    std::advance (predIt,*delIt);
@@ -688,6 +740,20 @@ void domainAnalysis::analyseActions()
 
 
 //PLANNING INFO FUNCTIONS
+actionAnalysis* domainAnalysis::getAction(string action)
+{
+	list<actionAnalysis*>::iterator actIt = actionList.begin();
+	for(; actIt != actionList.end(); actIt++)
+	{
+		if((*actIt)->name == action)
+		{
+			return (*actIt);
+		}
+	}
+
+	return NULL;
+}
+
 bool domainAnalysis::isMetricDependent(string action)
 {
 	list<actionAnalysis*>::iterator actIt = actionList.begin();

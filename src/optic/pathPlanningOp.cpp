@@ -1018,8 +1018,11 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
 	    	}
 
 	    	actionAgent->atPosition = strGoal;
-	    	alreadyVisited.push_back(strGoal);
-		}
+	    	if(!(std::find(alreadyVisited.begin(), alreadyVisited.end(), strGoal) != alreadyVisited.end()))
+	    	{
+	    		alreadyVisited.push_back(strGoal);
+	    	}
+	    }
 	}
 
 	auxStream << *(actItr->first);
@@ -1077,6 +1080,7 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
     	}
 
     	//Iterate over agent dependent objectives
+    	int nAlreadyVisited = 0;
     	list<Position*>::iterator posIt = agent->problemGoal.begin();
     	for(; posIt != agent->problemGoal.end(); posIt++)
     	{
@@ -1084,6 +1088,7 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
         	if(std::find(alreadyVisited.begin(), alreadyVisited.end(), strGo) != alreadyVisited.end())
         	{
         		cout << "Skyping" << strProblemGoal << " goal, already visited." << endl;
+        		nAlreadyVisited++;
         		continue;
         	}
 
@@ -1109,6 +1114,7 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
         	if(std::find(alreadyVisited.begin(), alreadyVisited.end(), strProblemGoal) != alreadyVisited.end())
         	{
         		cout << "Skyping " << strProblemGoal << " goal, already visited." << endl;
+        		nAlreadyVisited++;
         		continue;
         	}
 
@@ -1126,12 +1132,16 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
 			}
     	}
 
-
     	cout << "Distance from proposed new position to goal " << goalChoosed << " = " << minCost << endl;
 
-    	if(agent->distMetricDependent && this->distMetricActive)
+    	if(nAlreadyVisited >= (agent->problemGoal.size() + commonProblemGoal.size()))
     	{
-    		gCost = costOpticDistanceFree+ minCost + directPath->getCost() / 2;
+    		gCost = costOpticDistanceFree + directPath->getCost();
+    		pathCost = directPath->getCost();
+    	}
+    	else if(agent->distMetricDependent && this->distMetricActive)
+    	{
+    		gCost = costOpticDistanceFree + minCost + directPath->getCost() / 2;
     		pathCost = minCost + directPath->getCost() / 2;
     	}else if(this->distMetricActive)
     	{
