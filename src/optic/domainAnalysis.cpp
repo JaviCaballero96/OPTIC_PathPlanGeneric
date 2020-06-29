@@ -738,6 +738,110 @@ void domainAnalysis::analyseActions()
     }
 }
 
+void domainAnalysis::findPrecondGoalActions()
+{
+	//Iterate over action effects, try to find changes in parameters and delete not useful conditions
+    list<actionAnalysis*>::iterator actIt = actionList.begin();
+    for(; actIt != actionList.end(); actIt++)
+    {
+		if((*actIt)->isGoalAction && !((*actIt)->isFinalStateGoalAction))
+		{
+		    list<actionAnalysis*>::iterator actIt2 = actionList.begin();
+		    for(; actIt2 != actionList.end(); actIt2++)
+		    {
+				if(!((*actIt2)->isMetricDependent))
+				{
+					list<predicateAnalysis*>::iterator precondIt = (*actIt)->precondPred.begin();
+					for(; precondIt != (*actIt)->precondPred.end(); precondIt++)
+					{
+						list<predicateAnalysis*>::iterator effectIt = (*actIt2)->effectsPred.begin();
+					    for(; effectIt != (*actIt2)->effectsPred.end(); effectIt++)
+					    {
+					    	if((*effectIt)->name == (*precondIt)->name &&
+					    		(*effectIt)->arguments.size() == (*precondIt)->arguments.size())
+					    	{
+					    		list<string>::iterator strIt1 = (*effectIt)->argumentType.begin();
+								list<string>::iterator strIt2 = (*precondIt)->argumentType.begin();
+								bool argumentsEqual = true;
+								for(; strIt1 != (*effectIt)->argumentType.end(); strIt1++)
+								{
+									if(*strIt1 != *strIt2)
+									{
+										argumentsEqual = false;
+									}
+									strIt2++;
+								}
+
+								if(argumentsEqual)
+								{
+									(*actIt2)->isRequiredGoalAction = true;
+								}
+					    	}
+					    }
+					}
+			    }
+		    }
+		}
+    }
+}
+
+void domainAnalysis::findPositionPredicate()
+{
+    list<predicateAnalysis*>::iterator predIt = predicateList.begin();
+    for(; predIt != predicateList.end(); predIt++)
+    {
+    	if((*predIt)->argumentType.size() == 2)
+    	{
+    		bool locType = false, agentType = false;
+        	list<string>::iterator strIt = (*predIt)->argumentType.begin();
+            for(; strIt != (*predIt)->argumentType.end(); strIt++)
+            {
+            	if ((*strIt) == "loc")
+            	{
+            		locType = true;
+            	}
+            	else if ((*strIt) == "agent")
+            	{
+            		agentType = true;
+            	}
+            }
+
+            if(locType && agentType)
+            {
+            	(*predIt)->isPositionPredicate = true;
+            }
+    	}
+    }
+}
+
+void domainAnalysis::findMovementAction()
+{
+	list<actionAnalysis*>::iterator actIt = actionList.begin();
+	for(; actIt != actionList.end(); actIt++)
+	{
+		bool negated = false, notNegated = false;
+		list<predicateAnalysis*>::iterator effectIt = (*actIt)->effectsPred.begin();
+		for(; effectIt != (*actIt)->effectsPred.end(); effectIt++)
+		{
+			if((*effectIt)->isPositionPredicate)
+			{
+				if((*effectIt)->negated)
+				{
+					negated = true;
+				}
+				else {
+					notNegated = true;
+				}
+			}
+		}
+
+        if(negated && notNegated)
+        {
+        	(*actIt)->isMovementAction = true;
+        }
+
+	}
+}
 
 //PLANNING INFO FUNCTIONS
 actionAnalysis* domainAnalysis::getAction(string action)
@@ -776,6 +880,34 @@ bool domainAnalysis::isGoalAction(string action)
 		if((*actIt)->name == action)
 		{
 			return (*actIt)->isGoalAction;
+		}
+	}
+
+	return false;
+}
+
+bool domainAnalysis::isMovementAction(string fullAction)
+{
+	istringstream lineStream(fullAction);
+	string word;
+	while(lineStream >> word)
+	{
+		while(word.find("(") != string::npos)
+		{
+			word = word.substr(word.find("(") + 1, word.length());
+		}
+		while(word.find(")") != string::npos)
+		{
+			word = word.substr(0, word.find(")"));
+		}
+
+		list<actionAnalysis*>::iterator actIt = actionList.begin();
+		for(; actIt != actionList.end(); actIt++)
+		{
+			if((*actIt)->name == word)
+			{
+				return (*actIt)->isMovementAction;
+			}
 		}
 	}
 

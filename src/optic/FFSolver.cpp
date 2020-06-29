@@ -2111,6 +2111,10 @@ public:
 						goalsSatisfied++;
 					}
 				}
+				if(actAnalysis->isRequiredGoalAction)
+				{
+					cost = cost - 1;
+				}
     		}
     	}
 

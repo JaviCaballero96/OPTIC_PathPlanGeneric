@@ -1,4 +1,5 @@
 #include "pathPlanningOp.h"
+#include "domainAnalysis.h"
 
 #ifdef STOCHASTICDURATIONS
 #include "StochasticDurations.h"
@@ -986,7 +987,7 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
 	{
 		cout << line << endl;
 		string action;
-		if(line.find("robotbase_goingto") != string::npos
+		if(DomainAnalysis.isMovementAction(line)
 				&& line.find("end") != string::npos)
 		{
 			Agent* actionAgent = NULL;
@@ -1030,7 +1031,7 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
 	auxStream.str("");
 
 	//If the action is movement
-	if(actionString.find("robotbase_goingto") != string::npos)
+	if(DomainAnalysis.isMovementAction(actionString))
 	{
 		//Distance metric
 

@@ -41,10 +41,14 @@ public :
 	//Negated, goal and actions
 	bool negated;
 
-	predicateAnalysis(string AName): name(AName), negated(false)
+	//Position Predicate
+	bool isPositionPredicate;
+
+	predicateAnalysis(string AName): name(AName), negated(false), isPositionPredicate(false)
 		{}
 
-	predicateAnalysis(predicateAnalysis* predicate): negated(false)
+	predicateAnalysis(predicateAnalysis* predicate):
+		negated(predicate->negated), isPositionPredicate(predicate->isPositionPredicate)
 	{
 		this->name = predicate->name;
 		list<string>::iterator strIt = predicate->arguments.begin();
@@ -125,6 +129,9 @@ public :
 	//Boolean that indicates if this action sets a predicate that must precede a goal action
 	bool isRequiredGoalAction;
 
+	//Movement action
+	bool isMovementAction;
+
 	list<predicateAnalysis*> precondPred;
 	list<functionAnalysis*> precondFunc;
 
@@ -132,7 +139,7 @@ public :
 	list<funcOperation*> effectsFuncOp;
 
 	actionAnalysis(string AName): name(AName), isMetricDependent(false), isGoalAction(false),
-			isFinalStateGoalAction(false), isRequiredGoalAction(false)
+			isFinalStateGoalAction(false), isRequiredGoalAction(false), isMovementAction(false)
 		{}
 
 };
@@ -173,6 +180,7 @@ public:
     actionAnalysis* getAction(string action);
     bool isMetricDependent(string action);
     bool isGoalAction(string action);
+    bool isMovementAction(string fullAction);
 
     //Read info functions
 	void readDomainActions();
@@ -187,6 +195,9 @@ public:
 	void findMetricDependentActions();
 	void findGoalActions();
 	void analyseGoalActions();
+	void findPrecondGoalActions();
+	void findPositionPredicate();
+	void findMovementAction();
 
 private:
 	functionAnalysis* findFunction(string argName);
