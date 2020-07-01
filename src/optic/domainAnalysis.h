@@ -117,17 +117,21 @@ public :
 	list<string> arguments;
 	list<string> argumentType;
 
-	//Boolean that indicates if this action will be used to optimize the metric
+	// Boolean that indicates if this action will be used to optimize the metric
 	bool isMetricDependent;
 
-	//Boolean that indicates if this action will set a goal predicate
+	// Boolean that indicates if this action will set a goal predicate
 	bool isGoalAction;
 	list<int> indexPredGoal;
 
-	//Boolean that indicates if this action will set a goal predicate that blocks metric actions
+	// Boolean that indicates if this action will set a goal predicate that blocks metric actions
 	bool isFinalStateGoalAction;
-	//Boolean that indicates if this action sets a predicate that must precede a goal action
+	// Boolean that indicates if this action sets a predicate that must precede a goal action
 	bool isRequiredGoalAction;
+
+	// Boolean that indicates if this action precedes sets a predicate
+	// that allows a metric dependent action to execute
+	bool isRequiredMetricAction;
 
 	//Movement action
 	bool isMovementAction;
@@ -139,7 +143,8 @@ public :
 	list<funcOperation*> effectsFuncOp;
 
 	actionAnalysis(string AName): name(AName), isMetricDependent(false), isGoalAction(false),
-			isFinalStateGoalAction(false), isRequiredGoalAction(false), isMovementAction(false)
+			isFinalStateGoalAction(false), isRequiredGoalAction(false), isRequiredMetricAction(false),
+			isMovementAction(false)
 		{}
 
 };
@@ -196,6 +201,7 @@ public:
 	void findGoalActions();
 	void analyseGoalActions();
 	void findPrecondGoalActions();
+	void findPrecondMetricActions();
 	void findPositionPredicate();
 	void findMovementAction();
 

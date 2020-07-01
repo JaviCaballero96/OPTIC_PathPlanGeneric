@@ -3182,6 +3182,7 @@ void RPGBuilder::initialise()
     DomainAnalysis.analyseActions();
     DomainAnalysis.findMetricDependentActions();
     DomainAnalysis.findGoalActions();
+    DomainAnalysis.findPrecondMetricActions();
     DomainAnalysis.analyseGoalActions();
     DomainAnalysis.findPrecondGoalActions();
 

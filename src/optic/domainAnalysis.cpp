@@ -785,6 +785,54 @@ void domainAnalysis::findPrecondGoalActions()
     }
 }
 
+void domainAnalysis::findPrecondMetricActions()
+{
+    list<actionAnalysis*>::iterator actIt = actionList.begin();
+    for(; actIt != actionList.end(); actIt++)
+    {
+		if((*actIt)->isMetricDependent)
+		{
+		    list<actionAnalysis*>::iterator actIt2 = actionList.begin();
+		    for(; actIt2 != actionList.end(); actIt2++)
+		    {
+				if(!((*actIt2)->isMetricDependent) &&
+					!((*actIt2)->isGoalAction) &&
+				    !((*actIt2)->isRequiredGoalAction))
+				{
+					list<predicateAnalysis*>::iterator precondIt = (*actIt)->precondPred.begin();
+					for(; precondIt != (*actIt)->precondPred.end(); precondIt++)
+					{
+						list<predicateAnalysis*>::iterator effectIt = (*actIt2)->effectsPred.begin();
+					    for(; effectIt != (*actIt2)->effectsPred.end(); effectIt++)
+					    {
+					    	if((*effectIt)->name == (*precondIt)->name &&
+					    						    		(*effectIt)->arguments.size() == (*precondIt)->arguments.size())
+							{
+								list<string>::iterator strIt1 = (*effectIt)->argumentType.begin();
+								list<string>::iterator strIt2 = (*precondIt)->argumentType.begin();
+								bool argumentsEqual = true;
+								for(; strIt1 != (*effectIt)->argumentType.end(); strIt1++)
+								{
+									if(*strIt1 != *strIt2)
+									{
+										argumentsEqual = false;
+									}
+									strIt2++;
+								}
+
+								if(argumentsEqual)
+								{
+									(*actIt2)->isRequiredMetricAction = true;
+								}
+							}
+					    }
+					}
+				}
+		    }
+		}
+    }
+}
+
 void domainAnalysis::findPositionPredicate()
 {
     list<predicateAnalysis*>::iterator predIt = predicateList.begin();

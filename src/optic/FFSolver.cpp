@@ -7167,6 +7167,8 @@ Solution FF::search(bool & reachedGoal)
         }
 
         bool triggerRestart = false;
+
+        SearchQueue solutionsFound;
         
         while (!triggerRestart && !searchQueue.empty()) {
 
@@ -7181,11 +7183,6 @@ Solution FF::search(bool & reachedGoal)
                     exit(2);
                 }
             }
-
-   	    	if(reachedGoal == true)
-   	    	{
-   	    		return workingBestSolution;
-   	    	}
 
             if(Globals::globalVerbosity & 10)
              {
@@ -7523,6 +7520,9 @@ Solution FF::search(bool & reachedGoal)
                                 reachedGoal = true;                            
                                 bool forceRestart = false;
                                 const pair<bool,bool> prognosis(carryOnSearching(succ->state()->getInnerState(), succ->plan, currentCost, succ->heuristicValue.admissibleCostEstimate, forceRestart));
+                            	/*solutionsFound.insert(succ.release(), visitTheState);
+                            	cout << "New solution found, printing full solution list:" << endl;
+                            	solutionsFound.printSearchItems();*/
                                 if (!prognosis.first) {
                                     return workingBestSolution;
                                 }                                
