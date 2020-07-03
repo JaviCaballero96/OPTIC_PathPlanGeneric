@@ -129,9 +129,16 @@ public :
 	// Boolean that indicates if this action sets a predicate that must precede a goal action
 	bool isRequiredGoalAction;
 
-	// Boolean that indicates if this action precedes sets a predicate
+	// Boolean that indicates if this action sets a predicate
 	// that allows a metric dependent action to execute
 	bool isRequiredMetricAction;
+
+
+	// Boolean that indicates if this action modifies or sets
+	// a metric value, which can or not affect the metric
+	bool isMetricFunctionSetterAction;
+	bool isMetricFunctionModifierAction;
+	bool isChangingActiveMetric;
 
 	//Movement action
 	bool isMovementAction;
@@ -144,7 +151,8 @@ public :
 
 	actionAnalysis(string AName): name(AName), isMetricDependent(false), isGoalAction(false),
 			isFinalStateGoalAction(false), isRequiredGoalAction(false), isRequiredMetricAction(false),
-			isMovementAction(false)
+			isMovementAction(false), isMetricFunctionSetterAction(false), isMetricFunctionModifierAction(false),
+			isChangingActiveMetric(false)
 		{}
 
 };
@@ -204,6 +212,7 @@ public:
 	void findPrecondMetricActions();
 	void findPositionPredicate();
 	void findMovementAction();
+	void findMetricOptimizerActions();
 
 private:
 	functionAnalysis* findFunction(string argName);

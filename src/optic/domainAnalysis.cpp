@@ -891,6 +891,140 @@ void domainAnalysis::findMovementAction()
 	}
 }
 
+void domainAnalysis::findMetricOptimizerActions()
+{
+	//This function tries to find actions that modify the value of the metric in the future
+	// by setting or modifying the state of the domain.
+
+	list<actionAnalysis*>::iterator actIt = actionList.begin();
+	for(; actIt != actionList.end(); actIt++)
+	{
+		if((*actIt)->isMetricDependent)
+		{
+			list<funcOperation*>::iterator funcOpIt = (*actIt)->effectsFuncOp.begin();
+			for(; funcOpIt != (*actIt)->effectsFuncOp.end(); funcOpIt++)
+			{
+				bool isMetricFunction = false;
+				list<functionAnalysis*>::iterator metricFuncIt = this->metric.functions.begin();
+				for(; metricFuncIt != this->metric.functions.end(); metricFuncIt++)
+				{
+					//Check if this function belongs to the metric
+
+					if((*funcOpIt)->function->name == (*metricFuncIt)->name &&
+							(*funcOpIt)->function->arguments.size() == (*metricFuncIt)->arguments.size())
+					{
+						list<string>::iterator strIt1 = (*funcOpIt)->function->argumentType.begin();
+						list<string>::iterator strIt2 = (*metricFuncIt)->argumentType.begin();
+						bool argumentsEqual = true;
+						for(; strIt1 != (*funcOpIt)->function->argumentType.end(); strIt1++)
+						{
+							if(*strIt1 != *strIt2)
+							{
+								argumentsEqual = false;
+							}
+							strIt2++;
+						}
+
+						if(argumentsEqual)
+						{
+							isMetricFunction = true;
+						}
+					}
+
+					//For each operator of the FunctionOp list, search for actions that changes or set the state.
+
+					list<functionAnalysis*>::iterator functionIt = (*funcOpIt)->operators.begin();
+					for(; functionIt != (*funcOpIt)->operators.end(); functionIt++)
+					{
+						//First, search for predicates that set the state of the function value
+					    list<predicateAnalysis*>::iterator predIt = predicateList.begin();
+						for(; predIt != predicateList.end(); predIt++)
+						{
+							bool existsAllArguments = true;
+							if((*functionIt)->argumentType.size() <= (*predIt)->argumentType.size())
+							{
+								list<string>::iterator strIt1 = (*functionIt)->argumentType.begin();
+								for(; strIt1 != (*functionIt)->argumentType.end(); strIt1++)
+								{
+									if(!(std::find((*predIt)->argumentType.begin(),
+											(*predIt)->argumentType.end(), (*strIt1)) != (*predIt)->argumentType.end()))
+									{
+											existsAllArguments = false;
+									}
+
+								}
+
+								if(existsAllArguments)
+								{
+									cout << "Found possible connection: predicate " << (*predIt)->name <<
+											" and function " << (*functionIt)->name << endl;
+
+									//Try to find an action that sets or changes this predicate
+									// 1) Set
+									list<actionAnalysis*>::iterator actIt2 = actionList.begin();
+									for(; actIt2 != actionList.end(); actIt2++)
+									{
+										if(!((*actIt2)->isMetricDependent) &&
+												!((*actIt2)->isGoalAction) &&
+												(*actIt2)->isRequiredMetricAction)
+										{
+
+											bool exists = false;
+											bool existsNegated = false;
+
+											//Check effects
+											list<predicateAnalysis*>::iterator predIt2 =  (*actIt2)->effectsPred.begin();
+											for(; predIt2 != (*actIt2)->effectsPred.end(); predIt2++)
+											{
+												list<string>::iterator strIt1 = (*predIt)->argumentType.begin();
+												list<string>::iterator strIt2 = (*predIt2)->argumentType.begin();
+												bool argumentsEqual = true;
+												for(; strIt1 != (*predIt)->argumentType.end(); strIt1++)
+												{
+													if(*strIt1 != *strIt2)
+													{
+														argumentsEqual = false;
+													}
+													strIt2++;
+												}
+
+												if(argumentsEqual)
+												{
+													if((*predIt2)->negated)
+													{
+														existsNegated = true;
+													}else
+													{
+														exists = true;
+													}
+												}
+											}
+
+											if(exists && existsNegated)
+											{
+												(*actIt2)->isMetricFunctionModifierAction = true;
+												(*actIt2)-> isChangingActiveMetric = isMetricFunction;
+												cout << "Action " << (*actIt2)->name << " modifies the state of function "
+														<< (*functionIt)->name << endl;
+											}else if(exists)
+											{
+												(*actIt2)->isMetricFunctionSetterAction = true;
+												(*actIt2)-> isChangingActiveMetric = isMetricFunction;
+												cout << "Action " << (*actIt2)->name << " sets the state of function "
+														<< (*functionIt)->name << endl;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 //PLANNING INFO FUNCTIONS
 actionAnalysis* domainAnalysis::getAction(string action)
 {
