@@ -674,7 +674,7 @@ void pathPlanningOp::printDirectPathsPerPos()
 
 void pathPlanningOp::calculateAllShortPaths()
 {
-	bool debug = false;
+	bool debug = true;
 
 	list<Position> :: iterator posIt;
 		for(posIt = positionList.begin();
@@ -704,7 +704,7 @@ void pathPlanningOp::calculateShortPaths(list<Position>::iterator origin, bool d
 
 DijkstraPath* pathPlanningOp::performDijkstra(list<Position>::iterator ori, list<Position>::iterator go, bool debug)
 {
-	int depth = 0 ,maxDepth = 5;
+	int depth = 0 ,maxDepth = 12;
 
 	DijkstraPath* fullPath = new DijkstraPath();;
 	list<pathObj> alreadyVisited;

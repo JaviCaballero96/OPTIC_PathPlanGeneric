@@ -172,6 +172,7 @@ public :
 
 class goalAnalysis {
 public :
+	int nGoals, nFinalStateGoals;
 	list<predicateAnalysis*> predicates;
 };
 
@@ -208,6 +209,7 @@ public:
 	void findMetricDependentActions();
 	void findGoalActions();
 	void analyseGoalActions();
+	void analyseGoalTypes();
 	void findPrecondGoalActions();
 	void findPrecondMetricActions();
 	void findPositionPredicate();

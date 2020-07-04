@@ -428,6 +428,8 @@ void domainAnalysis::readProblemGoal()
 	std:ifstream domainStream((this->problemRoute).c_str());
 
 	string line;
+	this->goal.nGoals = 0;
+	this->goal.nFinalStateGoals = 0;
 	while (getline(domainStream, line))
 	{
 		if(line.find(":goal") != string::npos)
@@ -499,6 +501,7 @@ void domainAnalysis::readProblemGoal()
 				}
 
 				this->goal.predicates.push_back(predicate);
+				this->goal.nGoals++;
 			}
 
 			break;
@@ -644,6 +647,51 @@ void domainAnalysis::analyseGoalActions()
 			}
 		}
 	}
+
+}
+
+void domainAnalysis::analyseGoalTypes()
+{
+	//Iterate over action effects, try to find changes in parameters and delete not useful conditions
+    list<actionAnalysis*>::iterator actIt = actionList.begin();
+    for(; actIt != actionList.end(); actIt++)
+    {
+		if((*actIt)->isGoalAction)
+		{
+			list<predicateAnalysis*>::iterator efActIt = (*actIt)->effectsPred.begin();
+			for(; efActIt != (*actIt)->effectsPred.end(); efActIt++)
+			{
+				list<predicateAnalysis*>::iterator goalPredIt = this->goal.predicates.begin();
+				for(; goalPredIt != this->goal.predicates.end(); goalPredIt++)
+				{
+					if((*efActIt)->name == (*goalPredIt)->name &&
+							(*efActIt)->negated == (*goalPredIt)->negated &&
+							(*efActIt)->arguments.size() == (*goalPredIt)->arguments.size())
+					{
+						list<string>::iterator strIt1 = (*efActIt)->argumentType.begin();
+						list<string>::iterator strIt2 = (*goalPredIt)->argumentType.begin();
+						bool argumentsEqual = true;
+						for(; strIt1 != (*efActIt)->argumentType.end(); strIt1++)
+						{
+							if(*strIt1 != *strIt2)
+							{
+								argumentsEqual = false;
+							}
+							strIt2++;
+						}
+
+						if(argumentsEqual)
+						{
+							if((*actIt)->isFinalStateGoalAction)
+							{
+								this->goal.nFinalStateGoals++;
+							}
+						}
+					}
+				}
+			}
+		}
+    }
 
 }
 

@@ -442,6 +442,11 @@ double calculateAdmissibleCost(const MinimalState & theState, const double & mak
         }
 
         gCost = pathPlan.calculateCost(actItr,theState,distTermActive,distCost,gCost,planString);
+        if(gCost == -1)
+        {
+        	cout << "error obtaining path cost" << endl;
+        	gCost = 1000;
+        }
 
     }
 
@@ -1942,6 +1947,7 @@ public:
 
         	//Calculate cost of the full node
             const double pCost = calculateNodeCost(p);
+            cout << "Calculated node cost: " << pCost << endl;
 
             list<SearchQueueItem*> & q = (category == 1 ? qOne[pCost] : qTwo[pCost]);
             
@@ -2097,23 +2103,60 @@ public:
 				actionAnalysis *actAnalysis = DomainAnalysis.getAction(action);
 				if(!(actAnalysis->isMetricDependent))
 				{
-					cost = cost + 1;
+					cost = cost + 5;
 				}
 
 				if(actAnalysis->isGoalAction)
 				{
 					if(actAnalysis->isFinalStateGoalAction)
 					{
+						if(goalsSatisfied >= (DomainAnalysis.goal.predicates.size() - DomainAnalysis.goal.nFinalStateGoals))
+						{
+							cost = cost - 10;
+						}
 						//cost = cost + DomainAnalysis.goal.predicates.size() - goalsSatisfied;
 					}else
 					{
-						cost = cost / 2;
-						goalsSatisfied++;
+						if(goalsSatisfied < (DomainAnalysis.goal.predicates.size() - DomainAnalysis.goal.nFinalStateGoals))
+						{
+							goalsSatisfied++;
+							cost = cost - (10*goalsSatisfied);
+						}
 					}
 				}
+
 				if(actAnalysis->isRequiredGoalAction)
 				{
-					cost = cost - 1;
+					cost = cost - 5;
+				}
+
+				if(actAnalysis->isRequiredMetricAction)
+				{
+					if(goalsSatisfied < (DomainAnalysis.goal.predicates.size() - DomainAnalysis.goal.nFinalStateGoals))
+					{
+						if(actAnalysis->isMetricFunctionModifierAction)
+						{
+							if(actAnalysis->isChangingActiveMetric)
+							{
+								cost = cost - 10;
+							}else
+							{
+								cost = cost + 100;
+							}
+						}else if(actAnalysis->isMetricFunctionSetterAction)
+						{
+							if(actAnalysis->isChangingActiveMetric)
+							{
+								cost = cost - 10;
+							}else
+							{
+								cost = cost + 100;
+							}
+						}else
+						{
+							cost = cost - 10;
+						}
+					}
 				}
     		}
     	}
