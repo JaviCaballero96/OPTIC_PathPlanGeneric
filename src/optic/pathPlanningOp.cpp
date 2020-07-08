@@ -1164,6 +1164,8 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
 	    			break;
 	    		}
 	    	}
+	    	gCost = gCost - riskCost;
+
     	}
 
     	if(this->riskMetricActive && riskActionDependent){

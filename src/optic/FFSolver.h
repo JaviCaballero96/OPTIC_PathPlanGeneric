@@ -315,7 +315,7 @@ public:
 
         bool goalsSatisfied;
         
-        HTrio() : goalsSatisfied(false) {};
+        HTrio() : goalsSatisfied(false), newCostEstimate(0) {};
         HTrio(const double & hvalue, const double & msIn, const double & mseIn, const int & planLength, const char *
 #ifndef NDEBUG
               diagnosisIn
@@ -327,6 +327,7 @@ public:
                 , diagnosis(diagnosisIn)
 #endif
                 , goalsSatisfied(gs)
+				, newCostEstimate(0)
         {
             if (FF::WAStar) {
                 if (FF::biasD) {
@@ -344,7 +345,7 @@ public:
         HTrio(const HTrio & h) : heuristicValue(h.heuristicValue),
                                  makespan(h.makespan), makespanEstimate(h.makespanEstimate),
                                  admissibleCostEstimate(h.admissibleCostEstimate),
-                                 qbreak(h.qbreak)
+                                 qbreak(h.qbreak),newCostEstimate(0)
 #ifndef NDEBUG
                 , diagnosis(h.diagnosis)
 #endif

@@ -2072,6 +2072,41 @@ public:
 		}
     }
 
+    void printFirstSearchItems()
+        {
+        	int i = 0, pass;
+        	if (!qOne.empty()) {
+        		pass = 0;
+        	}else
+        	{
+        		pass = 1;
+        	}
+
+        	map<double, list<SearchQueueItem*> > & currMap = (pass ? qTwo : qOne);
+
+            cout << "Te elements in the list are the following: " << endl;
+            map<double, list<SearchQueueItem*> >::iterator cmItr = currMap.begin();
+            const map<double, list<SearchQueueItem*> >::iterator cmEnd = currMap.end();
+
+            cout << "Elemet " << i << " - " << cmItr->first << endl;
+            //list<SearchQueueItem*>::iterator qItr = cmItr->second.begin();
+            //(*qItr)->printPlan();
+
+            for (; cmItr != cmEnd; ++cmItr) {
+            	list<SearchQueueItem*>::iterator qItr = cmItr->second.begin();
+            	const list<SearchQueueItem*>::iterator qEnd = cmItr->second.end();
+
+            	cout << "Elemet " << i << " - " << cmItr->first << endl;
+            	for (; qItr != qEnd; ++qItr) {
+            		(*qItr)->printPlan();
+            		break;
+            	}
+
+            	break;
+
+    		}
+        }
+
     int size() {
     	 if (!qOne.empty()) {
     		 return qOne.size();
@@ -2092,6 +2127,7 @@ public:
 
     	double cost = p->heuristicValue.newCostEstimate;
     	int goalsSatisfied = 0;
+    	bool lastActionGoalPrecond = false;
 
     	while(getline(planStream,line))
     	{
@@ -2101,10 +2137,6 @@ public:
 				string action = line.substr(line.find("(") + 1, line.length());
 				action = action.substr(0,action.find(" "));
 				actionAnalysis *actAnalysis = DomainAnalysis.getAction(action);
-				if(!(actAnalysis->isMetricDependent))
-				{
-					cost = cost + 5;
-				}
 
 				if(actAnalysis->isGoalAction)
 				{
@@ -2123,40 +2155,50 @@ public:
 							cost = cost - (10*goalsSatisfied);
 						}
 					}
+				}else if(lastActionGoalPrecond)
+				{
+					cost = cost + 10;
 				}
 
 				if(actAnalysis->isRequiredGoalAction)
 				{
-					cost = cost - 5;
+					cost = cost - 6;
+					lastActionGoalPrecond = true;
+				}else
+				{
+					lastActionGoalPrecond = false;
 				}
 
 				if(actAnalysis->isRequiredMetricAction)
 				{
-					if(goalsSatisfied < (DomainAnalysis.goal.predicates.size() - DomainAnalysis.goal.nFinalStateGoals))
+					if(actAnalysis->isMetricFunctionModifierAction)
 					{
-						if(actAnalysis->isMetricFunctionModifierAction)
-						{
-							if(actAnalysis->isChangingActiveMetric)
-							{
-								cost = cost - 10;
-							}else
-							{
-								cost = cost + 100;
-							}
-						}else if(actAnalysis->isMetricFunctionSetterAction)
-						{
-							if(actAnalysis->isChangingActiveMetric)
-							{
-								cost = cost - 10;
-							}else
-							{
-								cost = cost + 100;
-							}
-						}else
+						if(actAnalysis->isChangingActiveMetric)
 						{
 							cost = cost - 10;
+						}else
+						{
+							cost = cost + 100;
 						}
+					}else if(actAnalysis->isMetricFunctionSetterAction)
+					{
+						if(actAnalysis->isChangingActiveMetric)
+						{
+							cost = cost - 10;
+						}else
+						{
+							cost = cost + 100;
+						}
+					}else if (goalsSatisfied < (DomainAnalysis.goal.predicates.size() - DomainAnalysis.goal.nFinalStateGoals))
+					{
+						cost = cost - 10;
 					}
+
+				}
+
+				if(!(actAnalysis->isMetricDependent))
+				{
+					cost = cost + 5;
 				}
     		}
     	}
@@ -7229,6 +7271,7 @@ Solution FF::search(bool & reachedGoal)
 
             if(Globals::globalVerbosity & 10)
              {
+               searchQueue.printFirstSearchItems();
          	   searchQueue.printSearchItems();
              }
 
