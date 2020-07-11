@@ -119,6 +119,8 @@ public :
 
 	// Boolean that indicates if this action will be used to optimize the metric
 	bool isMetricDependent;
+	// Boolean that indicates if this metric deèndent action aims to be optimized by its parameters
+	bool isMetricOptimizer;
 
 	// Boolean that indicates if this action will set a goal predicate
 	bool isGoalAction;
@@ -149,7 +151,7 @@ public :
 	list<predicateAnalysis*> effectsPred;
 	list<funcOperation*> effectsFuncOp;
 
-	actionAnalysis(string AName): name(AName), isMetricDependent(false), isGoalAction(false),
+	actionAnalysis(string AName): name(AName), isMetricDependent(false), isMetricOptimizer(false), isGoalAction(false),
 			isFinalStateGoalAction(false), isRequiredGoalAction(false), isRequiredMetricAction(false),
 			isMovementAction(false), isMetricFunctionSetterAction(false), isMetricFunctionModifierAction(false),
 			isChangingActiveMetric(false)

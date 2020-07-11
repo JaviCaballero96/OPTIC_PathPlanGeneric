@@ -2128,6 +2128,7 @@ public:
     	double cost = p->heuristicValue.newCostEstimate;
     	int goalsSatisfied = 0;
     	bool lastActionGoalPrecond = false;
+    	int metricOptimizationActs = 0;
 
     	while(getline(planStream,line))
     	{
@@ -2175,7 +2176,8 @@ public:
 					{
 						if(actAnalysis->isChangingActiveMetric)
 						{
-							cost = cost - 10;
+							cost = cost - 6 + metricOptimizationActs;
+							metricOptimizationActs++;
 						}else
 						{
 							cost = cost + 100;
@@ -2184,7 +2186,8 @@ public:
 					{
 						if(actAnalysis->isChangingActiveMetric)
 						{
-							cost = cost - 10;
+							cost = cost - 6 + metricOptimizationActs;
+							metricOptimizationActs++;
 						}else
 						{
 							cost = cost + 100;
@@ -2196,7 +2199,7 @@ public:
 
 				}
 
-				if(!(actAnalysis->isMetricDependent))
+				if(!(actAnalysis->isMetricOptimizer))
 				{
 					cost = cost + 5;
 				}

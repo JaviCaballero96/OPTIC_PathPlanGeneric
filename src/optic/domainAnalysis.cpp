@@ -545,6 +545,38 @@ void domainAnalysis::findMetricDependentActions()
 						if(argumentsEqual)
 						{
 							(*actIt)->isMetricDependent = true;
+
+							bool optimizer = false;
+							list<functionAnalysis*>::iterator funcIt2 = (*funcOpIt)->operators.begin();
+							for(; funcIt2 != (*funcOpIt)->operators.end(); funcIt2++)
+							{
+								if((*funcIt2)->arguments.size() > 0)
+								{
+									list<string>::iterator strIt1 = (*funcIt2)->argumentType.begin();
+									list<string>::iterator strIt2 = (*actIt)->argumentType.begin();
+
+									int nCoincidences = 0;
+									for(; strIt1 != (*funcIt2)->argumentType.end(); strIt1++)
+									{
+										nCoincidences = 0;
+										for(; strIt2 != (*actIt)->argumentType.end(); strIt2++)
+										{
+											if(*strIt1 == *strIt2)
+											{
+												nCoincidences++;
+											}
+										}
+
+										if(nCoincidences > 1)
+										{
+											optimizer = true;
+										}
+									}
+
+								}
+							}
+
+							(*actIt)->isMetricOptimizer = optimizer;
 						}
 					}
 				}
@@ -600,7 +632,7 @@ void domainAnalysis::findGoalActions()
 
 void domainAnalysis::analyseGoalActions()
 {
-	//This fuuction tries to find which objectives have to be set
+	//This fuction tries to find which objectives have to be set
 	//during the execution and which should wait until the end to be set.
 
 	list<actionAnalysis*>::iterator actIt = this->actionList.begin();
@@ -614,7 +646,7 @@ void domainAnalysis::analyseGoalActions()
 			{
 				list<actionAnalysis*>::iterator actIt2 = this->actionList.begin();
 				for(; actIt2 != this->actionList.end(); actIt2++)
-					if((*actIt2)->isMetricDependent)
+					if(!((*actIt2)->isMetricOptimizer))
 					{
 						list<predicateAnalysis*>::iterator precondActIt = (*actIt2)->precondPred.begin();
 						for(; precondActIt != (*actIt2)->precondPred.end(); precondActIt++)
@@ -797,8 +829,8 @@ void domainAnalysis::findPrecondGoalActions()
 		    list<actionAnalysis*>::iterator actIt2 = actionList.begin();
 		    for(; actIt2 != actionList.end(); actIt2++)
 		    {
-				if(!((*actIt2)->isMetricDependent))
-				{
+				if(!((*actIt2)->isMetricOptimizer))
+		    	{
 					list<predicateAnalysis*>::iterator precondIt = (*actIt)->precondPred.begin();
 					for(; precondIt != (*actIt)->precondPred.end(); precondIt++)
 					{
@@ -838,12 +870,12 @@ void domainAnalysis::findPrecondMetricActions()
     list<actionAnalysis*>::iterator actIt = actionList.begin();
     for(; actIt != actionList.end(); actIt++)
     {
-		if((*actIt)->isMetricDependent)
+		if((*actIt)->isMetricOptimizer)
 		{
 		    list<actionAnalysis*>::iterator actIt2 = actionList.begin();
 		    for(; actIt2 != actionList.end(); actIt2++)
 		    {
-				if(!((*actIt2)->isMetricDependent) &&
+				if(!((*actIt2)->isMetricOptimizer) &&
 					!((*actIt2)->isGoalAction) &&
 				    !((*actIt2)->isRequiredGoalAction))
 				{
@@ -854,7 +886,7 @@ void domainAnalysis::findPrecondMetricActions()
 					    for(; effectIt != (*actIt2)->effectsPred.end(); effectIt++)
 					    {
 					    	if((*effectIt)->name == (*precondIt)->name &&
-					    						    		(*effectIt)->arguments.size() == (*precondIt)->arguments.size())
+					    		(*effectIt)->arguments.size() == (*precondIt)->arguments.size())
 							{
 								list<string>::iterator strIt1 = (*effectIt)->argumentType.begin();
 								list<string>::iterator strIt2 = (*precondIt)->argumentType.begin();
@@ -947,7 +979,7 @@ void domainAnalysis::findMetricOptimizerActions()
 	list<actionAnalysis*>::iterator actIt = actionList.begin();
 	for(; actIt != actionList.end(); actIt++)
 	{
-		if((*actIt)->isMetricDependent)
+		if((*actIt)->isMetricOptimizer)
 		{
 			list<funcOperation*>::iterator funcOpIt = (*actIt)->effectsFuncOp.begin();
 			for(; funcOpIt != (*actIt)->effectsFuncOp.end(); funcOpIt++)
@@ -1012,7 +1044,7 @@ void domainAnalysis::findMetricOptimizerActions()
 									list<actionAnalysis*>::iterator actIt2 = actionList.begin();
 									for(; actIt2 != actionList.end(); actIt2++)
 									{
-										if(!((*actIt2)->isMetricDependent) &&
+										if(!((*actIt2)->isMetricOptimizer) &&
 												!((*actIt2)->isGoalAction) &&
 												(*actIt2)->isRequiredMetricAction)
 										{
