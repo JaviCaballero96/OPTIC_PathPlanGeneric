@@ -125,6 +125,7 @@ public :
 	// Boolean that indicates if this action will set a goal predicate
 	bool isGoalAction;
 	list<int> indexPredGoal;
+	list<bool> isGoalArgument;
 
 	// Boolean that indicates if this action will set a goal predicate that blocks metric actions
 	bool isFinalStateGoalAction;
@@ -141,6 +142,9 @@ public :
 	bool isMetricFunctionSetterAction;
 	bool isMetricFunctionModifierAction;
 	bool isChangingActiveMetric;
+	list<int> effectModifierIndex;
+	int nOptimizationsPossible;
+	int nOptimizationDone;
 
 	//Movement action
 	bool isMovementAction;
@@ -154,7 +158,7 @@ public :
 	actionAnalysis(string AName): name(AName), isMetricDependent(false), isMetricOptimizer(false), isGoalAction(false),
 			isFinalStateGoalAction(false), isRequiredGoalAction(false), isRequiredMetricAction(false),
 			isMovementAction(false), isMetricFunctionSetterAction(false), isMetricFunctionModifierAction(false),
-			isChangingActiveMetric(false)
+			isChangingActiveMetric(false), nOptimizationsPossible(0), nOptimizationDone(0)
 		{}
 
 };
@@ -197,6 +201,7 @@ public:
     bool isMetricDependent(string action);
     bool isGoalAction(string action);
     bool isMovementAction(string fullAction);
+    void resetActionsState();
 
     //Read info functions
 	void readDomainActions();
@@ -217,6 +222,7 @@ public:
 	void findPositionPredicate();
 	void findMovementAction();
 	void findMetricOptimizerActions();
+	void calculatenOptimizationsPossible();
 
 private:
 	functionAnalysis* findFunction(string argName);

@@ -621,6 +621,21 @@ void domainAnalysis::findGoalActions()
 						{
 							(*actIt)->isGoalAction = true;
 							(*actIt)->indexPredGoal.push_back(index);
+
+							list<string>::iterator strIt3 = (*actIt)->argumentType.begin();
+							for(; strIt3 != (*actIt)->argumentType.end(); strIt3++)
+							{
+								bool argExists = false;
+								list<string>::iterator strIt4 = (*effectIt)->argumentType.begin();
+								for(; strIt4 != (*effectIt)->argumentType.end(); strIt4++)
+								{
+									if((*strIt3) == (*strIt4))
+									{
+										argExists = true;
+									}
+								}
+								(*actIt)->isGoalArgument.push_back(argExists);
+							}
 						}
 					}
 		    	}
@@ -1051,6 +1066,7 @@ void domainAnalysis::findMetricOptimizerActions()
 
 											bool exists = false;
 											bool existsNegated = false;
+											int index = 0;
 
 											//Check effects
 											list<predicateAnalysis*>::iterator predIt2 =  (*actIt2)->effectsPred.begin();
@@ -1070,14 +1086,23 @@ void domainAnalysis::findMetricOptimizerActions()
 
 												if(argumentsEqual)
 												{
+
 													if((*predIt2)->negated)
 													{
 														existsNegated = true;
 													}else
 													{
 														exists = true;
+														if(!(std::find((*actIt2)->effectModifierIndex.begin(),
+																(*actIt2)->effectModifierIndex.end(), index) !=
+																		(*actIt2)->effectModifierIndex.end()))
+														{
+															(*actIt2)->effectModifierIndex.push_back(index);
+														}
 													}
 												}
+
+												index++;
 											}
 
 											if(exists && existsNegated)
@@ -1100,6 +1125,49 @@ void domainAnalysis::findMetricOptimizerActions()
 						}
 					}
 				}
+			}
+		}
+	}
+}
+
+void domainAnalysis::calculatenOptimizationsPossible()
+{
+	list<actionAnalysis*>::iterator actIt = actionList.begin();
+	for(; actIt != actionList.end(); actIt++)
+	{
+		if((*actIt)->isChangingActiveMetric)
+		{
+			int index = 0;
+			list<predicateAnalysis*>::iterator effectIt = (*actIt)->effectsPred.begin();
+			for(; effectIt != (*actIt)->effectsPred.end(); effectIt++)
+			{
+				if(std::find((*actIt)->effectModifierIndex.begin(),
+						(*actIt)->effectModifierIndex.end(), index) !=
+								(*actIt)->effectModifierIndex.end())
+				{
+					int nOptions = 1;
+
+					list<string>::iterator strIt1 = (*effectIt)->argumentType.begin();
+					for(; strIt1 != (*effectIt)->argumentType.end(); strIt1++)
+					{
+						list<objectTypeAnalysis*>::iterator objIt2 = this->objectList.begin();
+						for(; objIt2 != this->objectList.end(); objIt2++)
+						{
+							if((*strIt1) == (*objIt2)->name)
+							{
+								nOptions = nOptions * (*objIt2)->instances.size();
+							}
+						}
+					}
+
+					nOptions = nOptions - (*effectIt)->argumentType.size();
+
+					if((*actIt)->nOptimizationsPossible < nOptions)
+					{
+						(*actIt)->nOptimizationsPossible = nOptions;
+					}
+				}
+				index++;
 			}
 		}
 	}
@@ -1174,6 +1242,18 @@ bool domainAnalysis::isMovementAction(string fullAction)
 	}
 
 	return false;
+}
+
+void domainAnalysis::resetActionsState()
+{
+	list<actionAnalysis*>::iterator actIt = actionList.begin();
+	for(; actIt != actionList.end(); actIt++)
+	{
+		if((*actIt)->isChangingActiveMetric)
+		{
+			(*actIt)->nOptimizationDone = 0;
+		}
+	}
 }
 
 //PRIVATE FUNCTIONS

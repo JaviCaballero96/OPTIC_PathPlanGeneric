@@ -2128,7 +2128,8 @@ public:
     	double cost = p->heuristicValue.newCostEstimate;
     	int goalsSatisfied = 0;
     	bool lastActionGoalPrecond = false;
-    	int metricOptimizationActs = 0;
+    	list<string> goalsAchieved;
+    	DomainAnalysis.resetActionsState();
 
     	while(getline(planStream,line))
     	{
@@ -2137,6 +2138,12 @@ public:
 				cout << line << endl;
 				string action = line.substr(line.find("(") + 1, line.length());
 				action = action.substr(0,action.find(" "));
+				string fullAction = line.substr(line.find("("), line.length());
+				fullAction = fullAction.substr(0, fullAction.find(")") + 1);
+
+				string fullActionArg = fullAction.substr(0, fullAction.find(" "));
+				fullAction = fullAction.substr(fullAction.find(" ") + 1, fullAction.length());
+
 				actionAnalysis *actAnalysis = DomainAnalysis.getAction(action);
 
 				if(actAnalysis->isGoalAction)
@@ -2147,13 +2154,26 @@ public:
 						{
 							cost = cost - 10;
 						}
-						//cost = cost + DomainAnalysis.goal.predicates.size() - goalsSatisfied;
 					}else
 					{
 						if(goalsSatisfied < (DomainAnalysis.goal.predicates.size() - DomainAnalysis.goal.nFinalStateGoals))
 						{
-							goalsSatisfied++;
-							cost = cost - (10*goalsSatisfied);
+							list<bool>::iterator boolIt = actAnalysis->isGoalArgument.begin();
+							for(; boolIt != actAnalysis->isGoalArgument.end(); boolIt++)
+							{
+								if(*boolIt)
+								{
+									fullActionArg = fullActionArg + " " + fullAction.substr(0, fullAction.find(" "));
+								}
+								fullAction = fullAction.substr(fullAction.find(" ") + 1, fullAction.length());
+							}
+
+							if(!(std::find(goalsAchieved.begin(), goalsAchieved.end(), fullActionArg) != goalsAchieved.end()))
+							{
+								goalsSatisfied++;
+								goalsAchieved.push_back(fullActionArg);
+								cost = cost - (10*goalsSatisfied);
+							}
 						}
 					}
 				}else if(lastActionGoalPrecond)
@@ -2176,8 +2196,11 @@ public:
 					{
 						if(actAnalysis->isChangingActiveMetric)
 						{
-							cost = cost - 6 + metricOptimizationActs;
-							metricOptimizationActs++;
+							if(actAnalysis->nOptimizationDone < actAnalysis->nOptimizationsPossible)
+							{
+								actAnalysis->nOptimizationDone++;
+								cost = cost - 5;
+							}
 						}else
 						{
 							cost = cost + 100;
@@ -2186,15 +2209,18 @@ public:
 					{
 						if(actAnalysis->isChangingActiveMetric)
 						{
-							cost = cost - 6 + metricOptimizationActs;
-							metricOptimizationActs++;
+							if(actAnalysis->nOptimizationDone < actAnalysis->nOptimizationsPossible)
+							{
+								actAnalysis->nOptimizationDone++;
+								cost = cost - 5;
+							}
 						}else
 						{
 							cost = cost + 100;
 						}
 					}else if (goalsSatisfied < (DomainAnalysis.goal.predicates.size() - DomainAnalysis.goal.nFinalStateGoals))
 					{
-						cost = cost - 10;
+						cost = cost - 5;
 					}
 
 				}
@@ -2208,7 +2234,6 @@ public:
 
     	return cost;
     }
-
 };
 
 void populateTimestamps(vector<double> & minTimestamps, double & makespan, list<FFEvent> & header, list<FFEvent> & now)
