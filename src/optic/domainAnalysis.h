@@ -174,6 +174,8 @@ public :
 	list<functionAnalysis*> functions;
 	list<double> weight;
 	bool minimise;
+
+	bool timeMetricActive;
 };
 
 class goalAnalysis {

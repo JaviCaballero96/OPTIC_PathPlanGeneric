@@ -2119,13 +2119,14 @@ public:
     double calculateNodeCost(SearchQueueItem* p)
     {
     	stringstream planStream;
-    	string line;
+    	string line, timeLoc = " end at ";
     	cout << "Calculating cost of the plan: " << endl;
     	streambuf * old2 = cout.rdbuf(planStream.rdbuf());
     	p->printPlan();
     	cout.rdbuf(old2);
 
     	double cost = p->heuristicValue.newCostEstimate;
+    	double maxTime = 0;
     	int goalsSatisfied = 0;
     	bool lastActionGoalPrecond = false;
     	list<string> goalsAchieved;
@@ -2136,6 +2137,14 @@ public:
     		if(line.find(" end at") != string::npos)
     		{
 				cout << line << endl;
+
+				string strTime =  line.substr(line.find(timeLoc) + timeLoc.length(), line.length());
+				double currTime = atof(strTime.c_str());
+				if(maxTime < currTime)
+				{
+					maxTime = currTime;
+				}
+
 				string action = line.substr(line.find("(") + 1, line.length());
 				action = action.substr(0,action.find(" "));
 				string fullAction = line.substr(line.find("("), line.length());
@@ -2232,6 +2241,10 @@ public:
     		}
     	}
 
+    	if(DomainAnalysis.metric.timeMetricActive)
+    	{
+    		cost = cost + maxTime/100;
+    	}
     	return cost;
     }
 };
