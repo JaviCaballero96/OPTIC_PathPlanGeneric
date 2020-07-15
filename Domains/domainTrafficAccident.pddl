@@ -1,6 +1,6 @@
 (define (domain rtam)
 (:requirements :typing :durative-actions)
-  (:types  
+  (:types
      ambulance police_car tow_truck fire_brigade - vehicle
      acc_victim vehicle car - subject
      city_location city - location
