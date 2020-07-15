@@ -6,7 +6,7 @@
      city_location city - location
      accident_location hospital police_station garage fire_station - city_location
      route
-     accident)
+     accident) 
 
   (:predicates
     (at ?physical_obj1 - subject ?location1 - location)
