@@ -111,10 +111,12 @@ void domainAnalysis::readDomainPredicates()
 	std:ifstream domainStream((this->domainRoute).c_str());
 
 	string line;
-	while (getline(domainStream, line))
+	bool alreadyFound = false;
+	while (getline(domainStream, line) && !alreadyFound)
 	{
 		if(line.find(":predicates") != string::npos)
 		{
+			alreadyFound = true;
 			while (getline(domainStream, line))
 			{
 				istringstream lineStream(line);
@@ -875,6 +877,8 @@ void domainAnalysis::findPrecondGoalActions()
 								if(argumentsEqual)
 								{
 									(*actIt2)->isRequiredGoalAction = true;
+									(*actIt)->nActionsRequired = (*actIt)->nActionsRequired + 1;
+									(*actIt2)->goalsPreceded.push_back((*actIt)->name);
 								}
 					    	}
 					    }
@@ -883,6 +887,28 @@ void domainAnalysis::findPrecondGoalActions()
 		    }
 		}
     }
+
+    actIt = actionList.begin();
+	for(; actIt != actionList.end(); actIt++)
+	{
+		if((*actIt)->isRequiredGoalAction)
+		{
+			list<string>::iterator strIt = (*actIt)->goalsPreceded.begin();
+			for(; strIt != (*actIt)->goalsPreceded.end(); strIt++)
+			{
+			    list<actionAnalysis*>::iterator actIt2 = actionList.begin();
+				for(; actIt2 != actionList.end(); actIt2++)
+				{
+					if((*strIt) == (*actIt2)->name)
+					{
+						(*actIt)->nReqActGoalPreceded.push_back((*actIt2)->nActionsRequired);
+					}
+				}
+			}
+		}
+	}
+
+
 }
 
 void domainAnalysis::findPrecondMetricActions()
@@ -1289,6 +1315,16 @@ void domainAnalysis::readDomainActPrecond(ifstream *domainStream)
 		list<predicateAnalysis*>::iterator predIt = predicateList.begin();
 		for(; predIt != predicateList.end(); predIt++)
 		{
+			string startStr= "atstart", endStr = "atend";
+			if(line.find(startStr) != string::npos)
+			{
+				line = line.erase(line.find(startStr), startStr.length());
+			}
+			if(line.find(endStr) != string::npos)
+			{
+				line = line.erase(line.find(endStr), endStr.length());
+			}
+
 			if(line.find((*predIt)->name) != string::npos &&
 					line.find("duration") == string::npos)
 			{

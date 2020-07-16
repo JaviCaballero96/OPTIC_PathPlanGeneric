@@ -399,38 +399,17 @@ double calculateAdmissibleCost(const MinimalState & theState, const double & mak
                         if (localDebug) {
                             cout << "+ " << makespan << "*" << *wItr << "  ; makespan term\n";
                         }
-                        strStream << *(RPGBuilder::getPNE(*vItr));
-                        auxString = strStream.str();
-                        if(auxString.find("dist") != string::npos && value != 0)
-                        {
-                        	distCost += value;
-                            distTermActive = true;
-                        }
                         gCost += value;
                     }
                 } else if (*vItr < pneCount) {
                     const double value = theState.secondMin[*vItr];
                     gCost += value * *wItr;
-                    strStream << *(RPGBuilder::getPNE(*vItr));
-                    auxString = strStream.str();
-                    if(auxString.find("dist") != string::npos && value != 0)
-                    {
-                    	distCost += value * *wItr;
-                        distTermActive = true;
-                    }
                     if (localDebug) {
                         cout << "+ " << value << "*" << *wItr << "  ; " << *(RPGBuilder::getPNE(*vItr)) << " term\n";
                     }
                 } else {
                     const double value = -theState.secondMax[*vItr - pneCount];
                     gCost += value * *wItr;
-                    strStream << *(RPGBuilder::getPNE(*vItr - pneCount));
-                    auxString = strStream.str();
-                    if(auxString.find("dist") != string::npos && value != 0)
-                    {
-                    	distCost += value * *wItr;
-                        distTermActive = true;
-                    }
                     if (localDebug) {
                         cout << "+ " << value << "*" << *wItr << "  ; " << *(RPGBuilder::getPNE(*vItr - pneCount)) << " term\n";
                     }
@@ -2128,7 +2107,7 @@ public:
     	double cost = p->heuristicValue.newCostEstimate;
     	double maxTime = 0;
     	int goalsSatisfied = 0;
-    	bool lastActionGoalPrecond = false;
+    	int lastActionGoalPrecond = -1;
     	list<string> goalsAchieved;
     	DomainAnalysis.resetActionsState();
 
@@ -2185,18 +2164,29 @@ public:
 							}
 						}
 					}
-				}else if(lastActionGoalPrecond)
+				}else if(lastActionGoalPrecond == 0)
 				{
 					cost = cost + 10;
+					lastActionGoalPrecond--;
 				}
 
 				if(actAnalysis->isRequiredGoalAction)
 				{
 					cost = cost - 6;
-					lastActionGoalPrecond = true;
+
+					int maxWait = 0;
+					list<int>::iterator intIt = actAnalysis->nReqActGoalPreceded.begin();
+					for(; intIt != actAnalysis->nReqActGoalPreceded.end(); intIt++)
+					{
+						if(maxWait < (*intIt))
+						{
+							maxWait = (*intIt);
+						}
+					}
+					lastActionGoalPrecond = maxWait - 1;
 				}else
 				{
-					lastActionGoalPrecond = false;
+					lastActionGoalPrecond--;
 				}
 
 				if(actAnalysis->isRequiredMetricAction)

@@ -119,18 +119,21 @@ public :
 
 	// Boolean that indicates if this action will be used to optimize the metric
 	bool isMetricDependent;
-	// Boolean that indicates if this metric deèndent action aims to be optimized by its parameters
+	// Boolean that indicates if this metric depèndent action aims to be optimized by its parameters
 	bool isMetricOptimizer;
 
 	// Boolean that indicates if this action will set a goal predicate
 	bool isGoalAction;
 	list<int> indexPredGoal;
 	list<bool> isGoalArgument;
+	int nActionsRequired;
 
 	// Boolean that indicates if this action will set a goal predicate that blocks metric actions
 	bool isFinalStateGoalAction;
 	// Boolean that indicates if this action sets a predicate that must precede a goal action
 	bool isRequiredGoalAction;
+	list<string> goalsPreceded;
+	list<int> nReqActGoalPreceded;
 
 	// Boolean that indicates if this action sets a predicate
 	// that allows a metric dependent action to execute
@@ -156,7 +159,7 @@ public :
 	list<funcOperation*> effectsFuncOp;
 
 	actionAnalysis(string AName): name(AName), isMetricDependent(false), isMetricOptimizer(false), isGoalAction(false),
-			isFinalStateGoalAction(false), isRequiredGoalAction(false), isRequiredMetricAction(false),
+			isFinalStateGoalAction(false), nActionsRequired(0), isRequiredGoalAction(false), isRequiredMetricAction(false),
 			isMovementAction(false), isMetricFunctionSetterAction(false), isMetricFunctionModifierAction(false),
 			isChangingActiveMetric(false), nOptimizationsPossible(0), nOptimizationDone(0)
 		{}

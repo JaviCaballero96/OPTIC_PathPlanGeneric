@@ -88,5 +88,5 @@
  (RobotBase_OnDock FOLLOWER0)
  )
 )
-(:metric minimize (+ (risk FOLLOWER0) (risk LEADER) (total_time)))
+(:metric minimize (+ (battery FOLLOWER0) (battery LEADER) (total_time)))
 )
