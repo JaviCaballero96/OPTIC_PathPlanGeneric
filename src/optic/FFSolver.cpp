@@ -7642,7 +7642,7 @@ Solution FF::search(bool & reachedGoal)
                             	solutionsFound.printSearchItems();*/
                                 if (!prognosis.first) {
                                     return workingBestSolution;
-                                }                                
+                                }
                                 keepState = prognosis.second;
                                 if (forceRestart && restartWithGoalStates) {
                                     triggerRestart = true;

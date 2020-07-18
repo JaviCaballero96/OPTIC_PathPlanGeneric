@@ -516,6 +516,131 @@ void domainAnalysis::readProblemGoal()
 	}
 }
 
+void domainAnalysis::readProblemInit()
+{
+	std:ifstream domainStream((this->problemRoute).c_str());
+
+	string line;
+	while (getline(domainStream, line))
+	{
+		if(line.find(":init") != string::npos)
+		{
+			while (getline(domainStream, line))
+			{
+				transform(line.begin(), line.end(), line.begin(), ::tolower);
+
+				string word;
+				istringstream lineStream(line);
+				lineStream >> word;
+
+				if(word == ")")
+				{
+					break;
+				}
+
+				while(word.find("(") != string::npos)
+				{
+					word = word.substr(word.find("(") + 1, word.length());
+				}
+				while(word.find(")") != string::npos)
+				{
+					word = word.substr(0, word.find(")"));
+				}
+
+				instanceAnalysis* instance = new instanceAnalysis();
+				if(word == "=")
+				{
+					lineStream >> word;
+					while(word.find("(") != string::npos)
+					{
+						word = word.substr(word.find("(") + 1, word.length());
+					}
+					while(word.find(")") != string::npos)
+					{
+						word = word.substr(0, word.find(")"));
+					}
+
+					list<functionAnalysis*>::iterator funcIt = functionList.begin();
+					int arguments = 0;
+					for(; funcIt != functionList.end(); funcIt++)
+					{
+						if(word == (*funcIt)->name)
+						{
+							arguments = (*funcIt)->arguments.size();
+							break;
+						}
+					}
+					functionAnalysis* function = new functionAnalysis(*funcIt);
+					list<string>::iterator strIt = (*funcIt)->arguments.begin();
+					for(int i = 0; i < arguments; i++)
+					{
+						lineStream >> word;
+						while(word.find("(") != string::npos)
+						{
+							word = word.substr(word.find("(") + 1, word.length());
+						}
+						while(word.find(")") != string::npos)
+						{
+							word = word.substr(0, word.find(")"));
+						}
+
+						function->argumentValue.push_back(word);
+					}
+
+					lineStream >> word;
+					while(word.find("(") != string::npos)
+					{
+						word = word.substr(word.find("(") + 1, word.length());
+					}
+					while(word.find(")") != string::npos)
+					{
+						word = word.substr(0, word.find(")"));
+					}
+
+					instance->PredFunc = false;
+					instance->function = function;
+					instance->value = atof(word.c_str());
+
+				}else
+				{
+					list<predicateAnalysis*>::iterator predIt = predicateList.begin();
+					int arguments = 0;
+					for(; predIt != predicateList.end(); predIt++)
+					{
+						if(word == (*predIt)->name)
+						{
+							arguments = (*predIt)->arguments.size();
+							break;
+						}
+					}
+					predicateAnalysis* predicate = new predicateAnalysis(*predIt);
+					list<string>::iterator strIt = (*predIt)->arguments.begin();
+					for(int i = 0; i < arguments; i++)
+					{
+						lineStream >> word;
+
+						while(word.find("(") != string::npos)
+						{
+							word = word.substr(word.find("(") + 1, word.length());
+						}
+						while(word.find(")") != string::npos)
+						{
+							word = word.substr(0, word.find(")"));
+						}
+
+						predicate->argumentValue.push_back(word);
+					}
+
+					instance->PredFunc = true;
+					instance->predicate = predicate;
+				}
+
+				this->instancesList.push_back(instance);
+			}
+		}
+	}
+}
+
 //ANALYSY FUNCTIONS
 
 void domainAnalysis::findMetricDependentActions()
@@ -1199,6 +1324,122 @@ void domainAnalysis::calculatenOptimizationsPossible()
 					}
 				}
 				index++;
+			}
+		}
+	}
+}
+
+void domainAnalysis::calculatenMaxMetricEstimate()
+{
+	this->maxMetricEstimate = 0;
+
+	list<functionAnalysis*>::iterator funcIt = this->metric.functions.begin();
+	for(; funcIt != this->metric.functions.end(); funcIt++)
+	{
+		list<actionAnalysis*>::iterator actIt = this->actionList.begin();
+		for(; actIt != this->actionList.end(); actIt++)
+		{
+			if((*actIt)->isMetricOptimizer)
+			{
+				list<funcOperation*>::iterator funcOpIt = (*actIt)->effectsFuncOp.begin();
+				for(; funcOpIt != (*actIt)->effectsFuncOp.end(); funcOpIt++)
+				{
+					if((*funcOpIt)->function->name == (*funcIt)->name)
+					{
+						bool argumentsEqual = true;
+						list<string>::iterator strIt1 = (*funcOpIt)->function->argumentType.begin();
+						list<string>::iterator strIt2 = (*funcIt)->argumentType.begin();
+						for(; strIt1 != (*funcOpIt)->function->argumentType.end(); strIt1++)
+						{
+							if(*strIt1 != *strIt2)
+							{
+								argumentsEqual = false;
+							}
+							strIt2++;
+						}
+
+						if(argumentsEqual)
+						{
+							double maxValue = 0;
+							double minValue = 0;
+							double maxMetricValue = 1;
+							double minMetricValue = 1;
+
+							list<functionAnalysis*>::iterator funcIt2 = (*funcOpIt)->operators.begin();
+							list<double>::iterator doubleIt = (*funcOpIt)->weight.begin();
+							for(; funcIt2 != (*funcOpIt)->operators.end(); funcIt2++)
+							{
+								if((*doubleIt) == 1)
+								{
+									maxValue = -999999;
+									minValue = 999999;
+								}else
+								{
+									maxValue = 999999;
+									minValue = -999999;
+								}
+								list<instanceAnalysis*>::iterator insIt = this->instancesList.begin();
+								for(; insIt != this->instancesList.end(); insIt++)
+								{
+									if(!((*insIt)->PredFunc))
+									{
+										if((*insIt)->function->name == (*funcIt2)->name)
+										{
+											bool argumentsEqual = true;
+											list<string>::iterator strIt1 = (*insIt)->function->argumentType.begin();
+											list<string>::iterator strIt2 = (*funcIt2)->argumentType.begin();
+											for(; strIt1 != (*insIt)->function->argumentType.end(); strIt1++)
+											{
+												if(*strIt1 != *strIt2)
+												{
+													argumentsEqual = false;
+												}
+												strIt2++;
+											}
+
+											if(argumentsEqual)
+											{
+												if((*doubleIt) == 1)
+												{
+													if(maxValue < (*insIt)->value)
+													{
+														maxValue = (*insIt)->value;
+													}
+													if(minValue > (*insIt)->value)
+													{
+														minValue = (*insIt)->value;
+													}
+												}else
+												{
+													if(maxValue > 1 / (*insIt)->value)
+													{
+														maxValue = 1 / (*insIt)->value;
+													}
+													if(minValue < 1 / (*insIt)->value)
+													{
+														minValue = 1 / (*insIt)->value;
+													}
+												}
+											}
+										}
+									}
+								}
+
+								maxMetricValue = maxMetricValue * maxValue;
+								minMetricValue = minMetricValue * minValue;
+								if(!((*funcOpIt)->increase))
+								{
+									maxMetricValue = -maxMetricValue;
+									minMetricValue = -minMetricValue;
+								}
+								doubleIt++;
+							}
+
+							this->maxMetricEstimate = this->maxMetricEstimate + maxMetricValue;
+							this->minMetricEstimate = this->minMetricEstimate + minMetricValue;
+						}
+					}
+				}
 			}
 		}
 	}

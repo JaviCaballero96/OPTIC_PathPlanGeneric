@@ -3176,6 +3176,7 @@ void RPGBuilder::initialise()
     DomainAnalysis.readProblemObjects();
     DomainAnalysis.readProblemMetric();
     DomainAnalysis.readProblemGoal();
+    DomainAnalysis.readProblemInit();
 
     //Analysis
     DomainAnalysis.findMovementAction();
@@ -3188,6 +3189,7 @@ void RPGBuilder::initialise()
     DomainAnalysis.findPrecondGoalActions();
     DomainAnalysis.findMetricOptimizerActions();
     DomainAnalysis.calculatenOptimizationsPossible();
+    DomainAnalysis.calculatenMaxMetricEstimate();
 
     //PathPlan Module Actions
     pathPlan.createPathPlanRoutes(instantiatedOp::opsBegin(),instantiatedOp::opsEnd(),

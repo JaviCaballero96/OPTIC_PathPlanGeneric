@@ -38,6 +38,7 @@ public :
 
 	//Values, only used in goal
 	list<string> argumentValue;
+
 	//Negated, goal and actions
 	bool negated;
 
@@ -117,6 +118,12 @@ public :
 	list<string> arguments;
 	list<string> argumentType;
 
+	list<predicateAnalysis*> precondPred;
+	list<functionAnalysis*> precondFunc;
+
+	list<predicateAnalysis*> effectsPred;
+	list<funcOperation*> effectsFuncOp;
+
 	// Boolean that indicates if this action will be used to optimize the metric
 	bool isMetricDependent;
 	// Boolean that indicates if this metric depèndent action aims to be optimized by its parameters
@@ -152,12 +159,6 @@ public :
 	//Movement action
 	bool isMovementAction;
 
-	list<predicateAnalysis*> precondPred;
-	list<functionAnalysis*> precondFunc;
-
-	list<predicateAnalysis*> effectsPred;
-	list<funcOperation*> effectsFuncOp;
-
 	actionAnalysis(string AName): name(AName), isMetricDependent(false), isMetricOptimizer(false), isGoalAction(false),
 			isFinalStateGoalAction(false), nActionsRequired(0), isRequiredGoalAction(false), isRequiredMetricAction(false),
 			isMovementAction(false), isMetricFunctionSetterAction(false), isMetricFunctionModifierAction(false),
@@ -187,6 +188,16 @@ public :
 	list<predicateAnalysis*> predicates;
 };
 
+class instanceAnalysis {
+public :
+	bool PredFunc;
+
+	predicateAnalysis* predicate;
+
+	functionAnalysis* function;
+	double value;
+};
+
 class domainAnalysis
 {
 public:
@@ -198,8 +209,12 @@ public:
     list<predicateAnalysis*> predicateList;
     list<functionAnalysis*> functionList;
     list<objectTypeAnalysis*> objectList;
-    metricAnalysis metric;
+    list<instanceAnalysis*> instancesList;
     goalAnalysis goal;
+    metricAnalysis metric;
+    double maxMetricEstimate;
+    double minMetricEstimate;
+
 
     //Planning info functions
     actionAnalysis* getAction(string action);
@@ -215,6 +230,7 @@ public:
 	void readProblemObjects();
 	void readProblemMetric();
 	void readProblemGoal();
+	void readProblemInit();
 
 	//Analysis functions
 	void analyseActions();
@@ -228,6 +244,7 @@ public:
 	void findMovementAction();
 	void findMetricOptimizerActions();
 	void calculatenOptimizationsPossible();
+	void calculatenMaxMetricEstimate();
 
 private:
 	functionAnalysis* findFunction(string argName);
