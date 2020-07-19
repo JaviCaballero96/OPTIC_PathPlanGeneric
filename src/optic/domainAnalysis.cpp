@@ -1443,8 +1443,35 @@ void domainAnalysis::calculatenMaxMetricEstimate()
 			}
 		}
 	}
+
+	this->metricNormalizer = 1;
+	while((this->maxMetricEstimate / this->metricNormalizer) > 1)
+	{
+		this->metricNormalizer = this->metricNormalizer * 10;
+	}
+
+	while((this->maxMetricEstimate / this->metricNormalizer) < 0.1)
+	{
+		this->metricNormalizer = this->metricNormalizer / 10;
+	}
 }
 
+void domainAnalysis::findMetricRestrictions()
+{
+	list<instanceAnalysis*>::iterator insIt = this->instancesList.begin();
+	for(; insIt != this->instancesList.end(); insIt++)
+	{
+		if(!((*insIt)->PredFunc))
+		{
+			if((*insIt)->function->name == "metricpercentage")
+			{
+				list<string>::iterator strIt = (*insIt)->function->argumentValue.begin();
+				this->metric.agentRestrictions.push_back(*strIt);
+				this->metric.agentRestrictionsValue.push_back((*insIt)->value);
+			}
+		}
+	}
+}
 //PLANNING INFO FUNCTIONS
 actionAnalysis* domainAnalysis::getAction(string action)
 {

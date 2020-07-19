@@ -180,6 +180,9 @@ public :
 	bool minimise;
 
 	bool timeMetricActive;
+
+	list<string> agentRestrictions;
+	list<double> agentRestrictionsValue;
 };
 
 class goalAnalysis {
@@ -214,6 +217,7 @@ public:
     metricAnalysis metric;
     double maxMetricEstimate;
     double minMetricEstimate;
+    double metricNormalizer;
 
 
     //Planning info functions
@@ -245,6 +249,7 @@ public:
 	void findMetricOptimizerActions();
 	void calculatenOptimizationsPossible();
 	void calculatenMaxMetricEstimate();
+	void findMetricRestrictions();
 
 private:
 	functionAnalysis* findFunction(string argName);

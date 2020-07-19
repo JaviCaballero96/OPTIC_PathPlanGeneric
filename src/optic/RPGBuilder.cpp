@@ -3190,6 +3190,7 @@ void RPGBuilder::initialise()
     DomainAnalysis.findMetricOptimizerActions();
     DomainAnalysis.calculatenOptimizationsPossible();
     DomainAnalysis.calculatenMaxMetricEstimate();
+    DomainAnalysis.findMetricRestrictions();
 
     //PathPlan Module Actions
     pathPlan.createPathPlanRoutes(instantiatedOp::opsBegin(),instantiatedOp::opsEnd(),

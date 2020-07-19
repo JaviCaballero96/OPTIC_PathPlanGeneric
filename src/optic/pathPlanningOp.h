@@ -95,7 +95,6 @@ class DijkstraPath{
 		{
 			return path;
 		}
-
 };
 
 class pathObj

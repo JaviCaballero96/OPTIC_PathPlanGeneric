@@ -2104,7 +2104,7 @@ public:
     	p->printPlan();
     	cout.rdbuf(old2);
 
-    	double cost = p->heuristicValue.newCostEstimate;
+    	double cost = p->heuristicValue.newCostEstimate / DomainAnalysis.metricNormalizer;
     	double maxTime = 0;
     	int goalsSatisfied = 0;
     	int lastActionGoalPrecond = -1;
@@ -2235,6 +2235,7 @@ public:
     	{
     		cost = cost + maxTime/100;
     	}
+
     	return cost;
     }
 };

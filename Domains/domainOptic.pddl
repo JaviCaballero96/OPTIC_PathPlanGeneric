@@ -1,5 +1,5 @@
 (define (domain MoBAr-Rover)
-   (:requirements :strips :typing :fluents :durative-actions :adl)
+   (:requirements :strips :typing :fluents :durative-actions :adl :preferences :constraints)
    (:types
      Loc Agent NavMode ICam - Object
    )
@@ -15,12 +15,13 @@
 		 (visited ?p - Loc)
 		 (dockPos ?p - Loc)
 		 (free ?a - Agent)
-		 (metricPercentage)
    )
+
 	 (:functions
 		 (batperdis ?a - Agent ?n - NavMode)
      (distance_to_move ?p1 ?p2 - Loc)
 		 (speed ?a - Agent ?n - NavMode)
+		 (metricPercentage ?a - Agent)
 		 (battery ?a - Agent)
 		 (posRisk ?p - Loc)
 		 (dist ?a - Agent)

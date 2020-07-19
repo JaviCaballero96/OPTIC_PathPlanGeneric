@@ -79,6 +79,8 @@
 (= (energyTransPhoto) 0.1)
 (= (timeTransPhoto) 0.1)
 (= (total_time) 0)
+(= (metricPercentage FOLLOWER0)	30)
+(= (metricPercentage LEADER) 70)
 )
 (:goal (and
  (Communication_transmittedP c10_14)
@@ -88,5 +90,5 @@
  (RobotBase_OnDock FOLLOWER0)
  )
 )
-(:metric minimize (+ (battery FOLLOWER0) (battery LEADER) (total_time)))
+(:metric minimize (+ (battery FOLLOWER0) (battery LEADER)))
 )
