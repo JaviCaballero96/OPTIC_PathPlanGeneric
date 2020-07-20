@@ -407,12 +407,22 @@ double calculateAdmissibleCost(const MinimalState & theState, const double & mak
                     if (localDebug) {
                         cout << "+ " << value << "*" << *wItr << "  ; " << *(RPGBuilder::getPNE(*vItr)) << " term\n";
                     }
+                    stringstream aux;
+                	streambuf * old2 = cout.rdbuf(aux.rdbuf());
+                	cout << *(RPGBuilder::getPNE(*vItr))<< endl;
+                	cout.rdbuf(old2);
+                    DomainAnalysis.storeAgentMetricValue(aux.str(), value);
                 } else {
                     const double value = -theState.secondMax[*vItr - pneCount];
                     gCost += value * *wItr;
                     if (localDebug) {
                         cout << "+ " << value << "*" << *wItr << "  ; " << *(RPGBuilder::getPNE(*vItr - pneCount)) << " term\n";
                     }
+                    stringstream aux;
+                	streambuf * old2 = cout.rdbuf(aux.rdbuf());
+                	cout << *(RPGBuilder::getPNE(*vItr - pneCount)) << endl;
+                	cout.rdbuf(old2);
+                    DomainAnalysis.storeAgentMetricValue(aux.str(), value);
                 }
             }
 

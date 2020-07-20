@@ -183,6 +183,7 @@ public :
 
 	list<string> agentRestrictions;
 	list<double> agentRestrictionsValue;
+	list<double> agentRestrictionsValuePlanning;
 };
 
 class goalAnalysis {
@@ -226,6 +227,7 @@ public:
     bool isGoalAction(string action);
     bool isMovementAction(string fullAction);
     void resetActionsState();
+    void storeAgentMetricValue(string function, double value);
 
     //Read info functions
 	void readDomainActions();

@@ -1468,6 +1468,7 @@ void domainAnalysis::findMetricRestrictions()
 				list<string>::iterator strIt = (*insIt)->function->argumentValue.begin();
 				this->metric.agentRestrictions.push_back(*strIt);
 				this->metric.agentRestrictionsValue.push_back((*insIt)->value);
+				this->metric.agentRestrictionsValuePlanning.push_back(0);
 			}
 		}
 	}
@@ -1551,6 +1552,58 @@ void domainAnalysis::resetActionsState()
 		if((*actIt)->isChangingActiveMetric)
 		{
 			(*actIt)->nOptimizationDone = 0;
+		}
+	}
+}
+
+void domainAnalysis::storeAgentMetricValue(string function, double value)
+{
+	list<functionAnalysis*>::iterator funcIt = this->metric.functions.begin();
+	for(; funcIt != this->metric.functions.end(); funcIt++)
+	{
+		istringstream lineStream(function);
+		string word;
+		while(lineStream >> word)
+		{
+			while(word.find("(") != string::npos)
+			{
+				word = word.substr(word.find("(") + 1, word.length());
+			}
+			while(word.find(")") != string::npos)
+			{
+				word = word.substr(0, word.find(")"));
+			}
+
+			if(word == (*funcIt)->name)
+			{
+				list<string>::iterator strIt = (*funcIt)->argumentType.begin();
+				list<string>::iterator strIt3 = (*funcIt)->argumentValue.begin();
+				for(; strIt != (*funcIt)->argumentType.end(); strIt++, strIt3++)
+				{
+					lineStream >> word;
+					while(word.find("(") != string::npos)
+					{
+						word = word.substr(word.find("(") + 1, word.length());
+					}
+					while(word.find(")") != string::npos)
+					{
+						word = word.substr(0, word.find(")"));
+					}
+
+					if(*strIt == "agent" && *strIt3 == word)
+					{
+						list<string>::iterator strIt2 = this->metric.agentRestrictions.begin();
+						list<double>::iterator douIt2 = this->metric.agentRestrictionsValuePlanning.begin();
+						for(; strIt2 != this->metric.agentRestrictions.end(); strIt2++, douIt2++)
+						{
+							if(word == *strIt2)
+							{
+								*douIt2 = value;
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 }
