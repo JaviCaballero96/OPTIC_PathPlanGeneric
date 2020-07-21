@@ -2121,6 +2121,8 @@ public:
     	list<string> goalsAchieved;
     	DomainAnalysis.resetActionsState();
 
+    	cost = checkMetricRestrictions(cost);
+
     	while(getline(planStream,line))
     	{
     		if(line.find(" end at") != string::npos)
@@ -2247,6 +2249,30 @@ public:
     	}
 
     	return cost;
+    }
+
+    double checkMetricRestrictions(double gCost)
+    {
+    	list<string>::iterator strIt =  DomainAnalysis.metric.agentRestrictions.begin();
+    	list<double>::iterator douIt1 = DomainAnalysis.metric.agentRestrictionsValue.begin();
+    	list<double>::iterator douIt2 = DomainAnalysis.metric.agentRestrictionsValuePlanning.begin();
+
+    	for(; strIt != DomainAnalysis.metric.agentRestrictions.end(); strIt++, douIt1++, douIt2++)
+    	{
+    		if(*douIt2 == 0 && gCost != 0)
+    		{
+    			cout << "This plan state doesn't fulfill the metric restriction: " << *strIt <<
+    			    		" should be more than " <<  *douIt1 << "% of the total metric." << endl;
+    		}else{
+				if((gCost / ((*douIt2) / DomainAnalysis.metricNormalizer)) < ((*douIt1) / 100))
+				{
+					cout << "This plan state doesn't fulfill the metric restriction: " << *strIt <<
+							" should be more than " <<  *douIt1 << "% of the total metric." << endl;
+				}
+    		}
+    	}
+
+    	return gCost;
     }
 };
 

@@ -80,7 +80,7 @@
 (= (timeTransPhoto) 0.1)
 (= (total_time) 0)
 (= (metricPercentage FOLLOWER0)	30)
-(= (metricPercentage LEADER) 70)
+(= (metricPercentage LEADER) 20)
 )
 (:goal (and
  (Communication_transmittedP c10_14)
