@@ -32,6 +32,7 @@
 (:functions
    (route-length ?O - route)
 	 (speed ?V - vehicle)
+	 (distance)
 )
 
   (:durative-action confirm_accident
@@ -136,6 +137,7 @@
        :effect (and
 		  					(at start (not (at ?V ?O)))
                 (at end (at ?V ?L))
+								(at end (increase (distance) (route-length ?R)))
         )
     )
 

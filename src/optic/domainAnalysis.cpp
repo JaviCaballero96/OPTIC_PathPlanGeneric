@@ -1688,6 +1688,17 @@ void domainAnalysis::readDomainActEffects(ifstream *domainStream)
 		list<predicateAnalysis*>::iterator predIt = predicateList.begin();
 		for(; predIt != predicateList.end(); predIt++)
 		{
+
+			string startStr= "at start", endStr = "at end";
+			if(line.find(startStr) != string::npos)
+			{
+				line = line.erase(line.find(startStr), startStr.length());
+			}
+			if(line.find(endStr) != string::npos)
+			{
+				line = line.erase(line.find(endStr), endStr.length());
+			}
+
 			if(line.find((*predIt)->name) != string::npos &&
 					line.find("duration") == string::npos)
 			{
@@ -1730,8 +1741,7 @@ void domainAnalysis::readDomainActEffects(ifstream *domainStream)
 		for(; funcIt != functionList.end(); funcIt++)
 		{
 			if(line.find((*funcIt)->name) != string::npos &&
-					line.find("duration") == string::npos &&
-					line.find("at end") != string::npos)
+					line.find("duration") == string::npos)
 			{
 				string word;
 				bool negative = false;
