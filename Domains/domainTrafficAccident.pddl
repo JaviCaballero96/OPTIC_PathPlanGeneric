@@ -96,7 +96,7 @@
             (at start (at ?V ?A))
             (at start (certified ?P))
             (at start (waiting ?P))
-	    (at start (untrapped ?P))
+				    (at start (untrapped ?P))
        )
        :effect (and
 	    			(at start (not (waiting ?P)))

@@ -90,5 +90,5 @@
  (RobotBase_OnDock FOLLOWER0)
  )
 )
-(:metric minimize (+ (battery FOLLOWER0) (battery LEADER)))
+(:metric minimize (+ (risk FOLLOWER0) (risk LEADER)))
 )

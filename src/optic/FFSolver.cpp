@@ -2238,7 +2238,14 @@ public:
 
 				if(!(actAnalysis->isMetricOptimizer))
 				{
-					cost = cost + 5;
+					if(DomainAnalysis.isUnkownUseAction(*actAnalysis))
+					{
+						double metricMedian = (DomainAnalysis.maxMetricEstimate - DomainAnalysis.minMetricEstimate)
+								/ DomainAnalysis.metricNormalizer;
+						cost = cost + metricMedian;
+					}else{
+						cost = cost + 5;
+					}
 				}
     		}
     	}

@@ -228,6 +228,7 @@ public:
     bool isMovementAction(string fullAction);
     void resetActionsState();
     void storeAgentMetricValue(string function, double value);
+    bool isUnkownUseAction(actionAnalysis action);
 
     //Read info functions
 	void readDomainActions();

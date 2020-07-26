@@ -699,7 +699,7 @@ void domainAnalysis::findMetricDependentActions()
 											}
 										}
 
-										if(nCoincidences > 1)
+										if(nCoincidences >= 1)
 										{
 											optimizer = true;
 										}
@@ -1606,6 +1606,23 @@ void domainAnalysis::storeAgentMetricValue(string function, double value)
 			}
 		}
 	}
+}
+
+bool domainAnalysis::isUnkownUseAction(actionAnalysis action)
+{
+	if( !(action.isMetricDependent) && !(action.isMetricOptimizer) && !(action.isGoalAction) &&
+			!(action.isFinalStateGoalAction ) && action.nActionsRequired == 0 && !(action.isRequiredGoalAction) &&
+			!(action.isRequiredMetricAction) && !(action.isMovementAction) && !(action.isMetricFunctionSetterAction) &&
+			!(action.isMetricFunctionModifierAction) && !(action.isChangingActiveMetric) &&
+			action.nOptimizationsPossible == 0 && action.nOptimizationDone == 0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+
 }
 
 //PRIVATE FUNCTIONS
