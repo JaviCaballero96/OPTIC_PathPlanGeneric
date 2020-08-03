@@ -352,6 +352,7 @@ void domainAnalysis::readProblemMetric()
 {
 	std:ifstream domainStream((this->problemRoute).c_str());
 	this->metric.timeMetricActive = false;
+	this->metric.totalTimeMetric = 0;
 
 	string line;
 	while (getline(domainStream, line))
@@ -390,7 +391,7 @@ void domainAnalysis::readProblemMetric()
 
 				transform(word.begin(), word.end(), word.begin(), ::tolower);
 				functionAnalysis* function = this->findFunction(word);
-				if(word == "total_time")
+				if(word == "total-time")
 				{
 					this->metric.timeMetricActive = true;
 				}
@@ -1558,6 +1559,12 @@ void domainAnalysis::resetActionsState()
 
 void domainAnalysis::storeAgentMetricValue(string function, double value)
 {
+
+	if(function == "total-time")
+	{
+		this->metric.totalTimeMetric = value;
+	}
+
 	list<functionAnalysis*>::iterator funcIt = this->metric.functions.begin();
 	for(; funcIt != this->metric.functions.end(); funcIt++)
 	{

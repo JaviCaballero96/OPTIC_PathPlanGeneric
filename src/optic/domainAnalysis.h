@@ -184,6 +184,7 @@ public :
 	list<string> agentRestrictions;
 	list<double> agentRestrictionsValue;
 	list<double> agentRestrictionsValuePlanning;
+	double totalTimeMetric;
 };
 
 class goalAnalysis {

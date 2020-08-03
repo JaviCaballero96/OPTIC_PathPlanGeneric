@@ -400,6 +400,7 @@ double calculateAdmissibleCost(const MinimalState & theState, const double & mak
                             cout << "+ " << makespan << "*" << *wItr << "  ; makespan term\n";
                         }
                         gCost += value;
+                        DomainAnalysis.storeAgentMetricValue("total-time", value);
                     }
                 } else if (*vItr < pneCount) {
                     const double value = theState.secondMin[*vItr];
@@ -2114,7 +2115,7 @@ public:
     	p->printPlan();
     	cout.rdbuf(old2);
 
-    	double cost = p->heuristicValue.newCostEstimate / DomainAnalysis.metricNormalizer;
+    	double cost = (p->heuristicValue.newCostEstimate - DomainAnalysis.metric.totalTimeMetric) / DomainAnalysis.metricNormalizer;
     	double maxTime = 0;
     	int goalsSatisfied = 0;
     	int lastActionGoalPrecond = -1;

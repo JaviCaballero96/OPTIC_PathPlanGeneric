@@ -90,5 +90,5 @@
  (RobotBase_OnDock FOLLOWER0)
  )
 )
-(:metric minimize (+ (risk FOLLOWER0) (risk LEADER)))
+(:metric minimize (+ (dist FOLLOWER0) (dist LEADER)))
 )
