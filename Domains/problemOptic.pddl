@@ -5,7 +5,6 @@
   Leader Follower0 - Agent
 	N_0 N_1 - NavMode
 	I_0 I_1 I_2 - ICam
-	m - Metric
 )
 (:init
 	(= (distance_to_move c10_2 c10_14) 12.00000)
@@ -90,5 +89,5 @@
  (RobotBase_OnDock FOLLOWER0)
  )
 )
-(:metric minimize (+ (dist FOLLOWER0) (dist LEADER)))
+(:metric minimize (+ (battery FOLLOWER0) (battery LEADER)))
 )
