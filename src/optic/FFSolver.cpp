@@ -335,7 +335,7 @@ double calculateAdmissibleCost(const MinimalState & theState, const double & mak
 {
     RPGBuilder::Metric * const theMetric = RPGBuilder::getMetric();
 
-    static const bool localDebug = true;
+    static const bool localDebug = false;
 
     double gCost = 0.0;
 
@@ -1752,7 +1752,7 @@ public:
 
 
     void printPlan() {
-        if (Globals::globalVerbosity & 2) {
+        if (true) {
             list<FFEvent>::iterator planItr = plan.begin();
             const list<FFEvent>::iterator planEnd = plan.end();
 
@@ -1937,7 +1937,7 @@ public:
 
         	//Calculate cost of the full node
             const double pCost = calculateNodeCost(p);
-            cout << "Calculated node cost: " << pCost << endl;
+            //cout << "Calculated node cost: " << pCost << endl;
 
             list<SearchQueueItem*> & q = (category == 1 ? qOne[pCost] : qTwo[pCost]);
             
@@ -2110,7 +2110,7 @@ public:
     {
     	stringstream planStream;
     	string line, timeLoc = " end at ";
-    	cout << "Calculating cost of the plan: " << endl;
+    	//cout << "Calculating cost of the plan: " << endl;
     	streambuf * old2 = cout.rdbuf(planStream.rdbuf());
     	p->printPlan();
     	cout.rdbuf(old2);
@@ -2119,6 +2119,9 @@ public:
     	double maxTime = 0;
     	int goalsSatisfied = 0;
     	int lastActionGoalPrecond = -1;
+    	int funcSolverSinceLastGoal = 0;
+    	bool init = true, optimizationStarted = false;
+    	bool lastActionPreFuncSolverFlag = false;
     	list<string> goalsAchieved;
     	DomainAnalysis.resetActionsState();
 
@@ -2128,7 +2131,7 @@ public:
     	{
     		if(line.find(" end at") != string::npos)
     		{
-				cout << line << endl;
+				//cout << line << endl;
 
 				string strTime =  line.substr(line.find(timeLoc) + timeLoc.length(), line.length());
 				double currTime = atof(strTime.c_str());
@@ -2154,6 +2157,7 @@ public:
 						if(goalsSatisfied >= (DomainAnalysis.goal.predicates.size() - DomainAnalysis.goal.nFinalStateGoals))
 						{
 							cost = cost - 10;
+							funcSolverSinceLastGoal = 0;
 						}
 					}else
 					{
@@ -2176,6 +2180,13 @@ public:
 								cost = cost - (10*goalsSatisfied);
 							}
 						}
+
+						if(goalsSatisfied >= (DomainAnalysis.goal.predicates.size() - DomainAnalysis.goal.nFinalStateGoals)
+								&& actAnalysis->isFunctionLimitedSolverPrecond)
+						{
+							cost = cost - 5;
+						}
+
 					}
 				}else if(lastActionGoalPrecond == 0)
 				{
@@ -2212,6 +2223,7 @@ public:
 							{
 								actAnalysis->nOptimizationDone++;
 								cost = cost - 5;
+								optimizationStarted = true;
 							}
 						}else
 						{
@@ -2225,6 +2237,7 @@ public:
 							{
 								actAnalysis->nOptimizationDone++;
 								cost = cost - 5;
+								optimizationStarted = true;
 							}
 						}else
 						{
@@ -2234,19 +2247,53 @@ public:
 					{
 						cost = cost - 5;
 					}
+				}
 
+				if(actAnalysis->isFunctionLimitedSolver)
+				{
+					if(init)
+					{
+						if(!optimizationStarted)
+						{
+							cost = cost - 6;
+						}else{
+							cost = cost + 6;
+				        }
+					}
+					else
+					{
+						cost = cost - 5 + funcSolverSinceLastGoal;
+						funcSolverSinceLastGoal ++;
+					}
+				}else if (lastActionPreFuncSolverFlag)
+				{
+					cost = cost + 5;
+				}
+
+				if(actAnalysis->isFunctionLimitedSolverPrecond)
+				{
+					lastActionPreFuncSolverFlag = true;
+				}else
+				{
+					lastActionPreFuncSolverFlag = false;
 				}
 
 				if(!(actAnalysis->isMetricOptimizer))
 				{
 					if(DomainAnalysis.isUnkownUseAction(*actAnalysis))
 					{
-						double metricMedian = (DomainAnalysis.maxMetricEstimate - DomainAnalysis.minMetricEstimate)
-								/ DomainAnalysis.metricNormalizer;
-						cost = cost + metricMedian;
+						if(!(actAnalysis->isPossiblyUseful))
+						{
+							double metricMedian = (DomainAnalysis.maxMetricEstimate - DomainAnalysis.minMetricEstimate)
+									/ DomainAnalysis.metricNormalizer;
+							cost = cost + metricMedian;
+						}
 					}else{
 						cost = cost + 5;
 					}
+				}else
+				{
+					init = false;
 				}
     		}
     	}
@@ -2269,13 +2316,13 @@ public:
     	{
     		if(*douIt2 == 0 && gCost != 0)
     		{
-    			cout << "This plan state doesn't fulfill the metric restriction: " << *strIt <<
-    			    		" should be more than " <<  *douIt1 << "% of the total metric." << endl;
+    			/*cout << "This plan state doesn't fulfill the metric restriction: " << *strIt <<
+    			    		" should be more than " <<  *douIt1 << "% of the total metric." << endl;*/
     		}else{
 				if((gCost / ((*douIt2) / DomainAnalysis.metricNormalizer)) < ((*douIt1) / 100))
 				{
-					cout << "This plan state doesn't fulfill the metric restriction: " << *strIt <<
-							" should be more than " <<  *douIt1 << "% of the total metric." << endl;
+					/*cout << "This plan state doesn't fulfill the metric restriction: " << *strIt <<
+							" should be more than " <<  *douIt1 << "% of the total metric." << endl;*/
 				}
     		}
     	}
@@ -6880,7 +6927,7 @@ Solution FF::search(bool & reachedGoal)
 
         if (Globals::globalVerbosity & 2) cout << "\n--\n";
         auto_ptr<SearchQueueItem> currSQI(searchQueue.pop_front());
-        currSQI->printPlan();
+        //currSQI->printPlan();
         
         if (currSQI->state()->hasBeenDominated) {
             continue;
@@ -7353,11 +7400,12 @@ Solution FF::search(bool & reachedGoal)
 
             stringstream planStream;
             SearchQueueItem* searchItem = searchQueue.pop_front();
+            //cout << "Tamañito niñooooo: " << sizeof(*searchItem) << " + " << sizeof(ExtendedMinimalState) << " + " << sizeof(MinimalState) << " + " << sizeof(StateTransformer) << " + " << sizeof(TemporalConstraints) << endl;
             searchItem->printPlan(planStream);
             string planString = planStream.str();
             auto_ptr<SearchQueueItem> currSQI(searchItem);
 
-            cout << "SQI at " << currSQI.get() << ", EMS at " << currSQI->state() << endl;
+            //cout << "SQI at " << currSQI.get() << ", EMS at " << currSQI->state() << endl;
             
             if (currSQI->state()->hasBeenDominated) {
                 continue;
@@ -7673,7 +7721,7 @@ Solution FF::search(bool & reachedGoal)
                                                     incrementalData.get(), succ->helpfulActions, currentCost, *helpfulActsItr, currSQI->plan, newDummySteps);
                         }
 
-                        succ->printPlan();
+                        //succ->printPlan();
                         if (succ->heuristicValue.heuristicValue != -1.0) {
 
                             bool keepState = true;
@@ -7685,7 +7733,8 @@ Solution FF::search(bool & reachedGoal)
                             	/*solutionsFound.insert(succ.release(), visitTheState);
                             	cout << "New solution found, printing full solution list:" << endl;
                             	solutionsFound.printSearchItems();*/
-                                if (!prognosis.first) {
+                                //if (!prognosis.first) {
+                                if(true){
                                     return workingBestSolution;
                                 }
                                 keepState = prognosis.second;

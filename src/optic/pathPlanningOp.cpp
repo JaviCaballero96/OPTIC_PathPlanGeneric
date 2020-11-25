@@ -22,7 +22,7 @@ void pathPlanningOp::createPathPlanRoutes(OpStore::iterator opBeginIt,
 		OpStore::iterator opEndIt, PNEStore::iterator pneBeginIt,
 		PNEStore::iterator pneEndIt)
 {
-	bool debug = true;
+	bool debug = false;
 
     this->maxRisk = 0;
     this->maxDist = 0;
@@ -162,7 +162,7 @@ void pathPlanningOp::storeOriginGoalsAgents(VAL::goal & g,
 	originStrStream.str("");
 
 	//Store Goal
-	cout << g << endl;
+	//cout << g << endl;
 	stringstream goalStrStream;
 	string line, agentArgument = "", goal;
 
@@ -176,13 +176,13 @@ void pathPlanningOp::storeOriginGoalsAgents(VAL::goal & g,
         //cout << line << endl;
 		if(line.find("(prop)") != string::npos)
 		{
-			cout << endl << "New goal: ";
+			//cout << endl << "New goal: ";
 			getline(goalStrStream, line);
 			getline(goalStrStream, line);
 			getline(goalStrStream, line);
 			line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
 			line = line.substr(line.find(":")+1,line.length());
-			cout << line;
+			//cout << line;
 			if(line.find("robotbase_at") != string::npos ||
 				    line.find("visited") != string::npos ||
 				    line.find("cameras_picture") != string::npos ||
@@ -203,7 +203,7 @@ void pathPlanningOp::storeOriginGoalsAgents(VAL::goal & g,
 			getline(goalStrStream, line);
 			line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
 			line = line.substr(line.find(":")+1,line.find("[")-5);
-			cout << " " << line << "(";
+			//cout << " " << line << "(";
 			arg = line;
 			while(getline(goalStrStream, line))
 			{
@@ -211,14 +211,14 @@ void pathPlanningOp::storeOriginGoalsAgents(VAL::goal & g,
 				{
 					if(line.find("NULL") != string::npos)
 					{
-						cout << ") ";
+						//cout << ") ";
 						break;
 					}
 					getline(goalStrStream, line);
 					getline(goalStrStream, line);
 					line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
 					line = line.substr(line.find(":")+1,line.find("[")-5);
-					cout << "/" << line;
+					//cout << "/" << line;
 					string type = line;
 					if(type.find("agent") != string::npos)
 					{
@@ -257,12 +257,12 @@ void pathPlanningOp::storeOriginGoalsAgents(VAL::goal & g,
 			}
 		}
     }
-    cout << endl;
+    //cout << endl;
 }
 
 void pathPlanningOp::storeMetric(VAL::metric_spec* metric)
 {
-	cout << *metric << endl;
+	//cout << *metric << endl;
 
 	stringstream metricStrStream;
 	string line;
@@ -271,7 +271,7 @@ void pathPlanningOp::storeMetric(VAL::metric_spec* metric)
 	metric->write(metricStrStream);
 	cout.rdbuf( old );
 
-	cout << "Metric: " << endl;
+	//cout << "Metric: " << endl;
 
 	this->riskMetricActive = false;
 	this->distMetricActive = false;
@@ -290,7 +290,7 @@ void pathPlanningOp::storeMetric(VAL::metric_spec* metric)
 			string argName = line;
 			string agentName;
 
-			cout << "   " << argName;
+			//cout << "   " << argName;
 
 			getline(metricStrStream, line);
 			getline(metricStrStream, line);
@@ -302,7 +302,7 @@ void pathPlanningOp::storeMetric(VAL::metric_spec* metric)
 				getline(metricStrStream, line);
 				line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
 				line = line.substr(line.find(":")+1,line.find("[")-5);
-				cout << " " << line << "(";
+				//cout << " " << line << "(";
 				arg = line;
 				while(getline(metricStrStream, line))
 				{
@@ -310,14 +310,14 @@ void pathPlanningOp::storeMetric(VAL::metric_spec* metric)
 					{
 						if(line.find("NULL") != string::npos)
 						{
-							cout << ") " << endl;
+							//cout << ") " << endl;
 							break;
 						}
 						getline(metricStrStream, line);
 						getline(metricStrStream, line);
 						line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
 						line = line.substr(line.find(":")+1,line.find("[")-5);
-						cout << "/" << line;
+						//cout << "/" << line;
 						string type = line;
 						if(type.find("agent") != string::npos)
 						{
@@ -371,13 +371,13 @@ void pathPlanningOp::searchOrigin(stringstream & effectStream)
         //cout << line << endl;
 		if(line.find("(prop)") != string::npos || line.find("(func_term)") != string::npos)
 		{
-			cout << endl << "New statement: ";
+			//cout << endl << "New statement: ";
 			getline(effectStream, line);
 			getline(effectStream, line);
 			getline(effectStream, line);
 			line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
 			line = line.substr(line.find(":")+1,line.length());
-			cout << line;
+			//cout << line;
 			if(line.find("free") != string::npos)
 			{
 				storeAgent = true;
@@ -407,7 +407,7 @@ void pathPlanningOp::searchOrigin(stringstream & effectStream)
 			getline(effectStream, line);
 			line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
 			line = line.substr(line.find(":")+1,line.find("[")-5);
-			cout << " " << line << "(";
+			//cout << " " << line << "(";
 			arg = line;
 			bool keep = true;
 			while(getline(effectStream, line) && keep)
@@ -416,14 +416,14 @@ void pathPlanningOp::searchOrigin(stringstream & effectStream)
 				{
 					if(line.find("NULL") != string::npos)
 					{
-						cout << ") ";
+						//cout << ") ";
 						break;
 					}
 					getline(effectStream, line);
 					getline(effectStream, line);
 					line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
 					line = line.substr(line.find(":")+1,line.find("[")-5);
-					cout << "/" << line;
+					//cout << "/" << line;
 					string type = line;
 					if(type.find("agent") != string::npos &&
 						storeAgent)
@@ -515,7 +515,7 @@ void pathPlanningOp::searchOrigin(stringstream & effectStream)
 			}
 		}
     }
-    cout << endl;
+    //cout << endl;
 }
 
 bool pathPlanningOp::exists(string ori, string go)
@@ -565,9 +565,9 @@ void pathPlanningOp::printAllRoutes()
 	for(pathIt = allPossiblePaths.begin();
 				pathIt != allPossiblePaths.end(); pathIt++)
 	{
-		cout << i << "- From (" << (*pathIt)->getOrigin().x << "," << (*pathIt)->getOrigin().y <<
+		/*cout << i << "- From (" << (*pathIt)->getOrigin().x << "," << (*pathIt)->getOrigin().y <<
 				") to (" << (*pathIt)->getGoal().x << "," << (*pathIt)->getGoal().y <<
-				") -- cost: " << (*pathIt)->getCost() << endl;
+				") -- cost: " << (*pathIt)->getCost() << endl;*/
 		i++;
 	}
 }
@@ -674,7 +674,7 @@ void pathPlanningOp::printDirectPathsPerPos()
 
 void pathPlanningOp::calculateAllShortPaths()
 {
-	bool debug = true;
+	bool debug = false;
 
 	list<Position> :: iterator posIt;
 		for(posIt = positionList.begin();
@@ -704,7 +704,7 @@ void pathPlanningOp::calculateShortPaths(list<Position>::iterator origin, bool d
 
 DijkstraPath* pathPlanningOp::performDijkstra(list<Position>::iterator ori, list<Position>::iterator go, bool debug)
 {
-	int depth = 0 ,maxDepth = 12;
+	int depth = 0 ,maxDepth = 30;
 
 	DijkstraPath* fullPath = new DijkstraPath();;
 	list<pathObj> alreadyVisited;
@@ -837,7 +837,7 @@ DijkstraPath* pathPlanningOp::findShortPath(string ori, string go)
 
 bool pathPlanningOp::isValid(instantiatedOp* instOp)
 {
-	bool debug = true;
+	bool debug = false;
 	stringstream ss;
 
 	ss << *instOp;
@@ -846,11 +846,11 @@ bool pathPlanningOp::isValid(instantiatedOp* instOp)
 
 	if(ss.str().substr(1,ss.str().find(" ")-1) == "robotbase_goingto")
 	{
-		cout << "	It is, checking if it is a short path." << endl;
+		if (debug) cout << "	It is, checking if it is a short path." << endl;
 		return isAShortPath(instOp, debug);
 	}else
 	{
-		cout << "	It is not, returning." << endl;
+		if (debug) cout << "	It is not, returning." << endl;
 		return true;
 	}
 
@@ -902,7 +902,7 @@ bool pathPlanningOp::isAShortPath(instantiatedOp* instOp, bool debug)
 	}
 
 	if(!isShort)
-	 cout << "		It is not a short path" << endl;
+		if(debug) cout << "		It is not a short path" << endl;
 
 	return isShort;
 }
@@ -972,8 +972,8 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
 	Agent *agent;
 	istringstream planStream(planString);
 
-	cout << "Considering action: " << *(actItr->first) << endl;
-	cout << "In the state: " << endl;
+	//cout << "Considering action: " << *(actItr->first) << endl;
+	//cout << "In the state: " << endl;
 
 	//Reset agents state
 	list<Agent*>::iterator agentIt = agents.begin();
@@ -985,7 +985,7 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
 
 	while(getline(planStream, line))
 	{
-		cout << line << endl;
+		//cout << line << endl;
 		string action;
 		if(DomainAnalysis.isMovementAction(line)
 				&& line.find("end") != string::npos)
@@ -1035,7 +1035,7 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
 	{
 		//Distance metric
 
-		cout << "Considering applying a pathplanning op" <<  endl;
+		//cout << "Considering applying a pathplanning op" <<  endl;
 		riskActionDependent = true;
 
     	do
@@ -1063,7 +1063,7 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
     	    strGo = strGo.substr(0, strGo.length()-1);
     	}
 
-    	cout << "from " << strOr << " to " << strGo << endl;
+    	//cout << "from " << strOr << " to " << strGo << endl;
 
     	pathObj *directPath = find(strOr, strGo);
     	if(directPath == NULL)
@@ -1072,7 +1072,7 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
     		return -1;
     	}
 
-    	cout << "Optic cost = " << gCost << " and distance = " <<  directPath->getCost() << endl;
+    	//cout << "Optic cost = " << gCost << " and distance = " <<  directPath->getCost() << endl;
     	if(agent->distMetricDependent && gCost != 0)
     	{
     		costOpticDistanceFree = gCost - directPath->getCost();
@@ -1088,7 +1088,7 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
     		string strProblemGoal = "c" + (*posIt)->x + "_" + (*posIt)->y;
         	if(std::find(alreadyVisited.begin(), alreadyVisited.end(), strGo) != alreadyVisited.end())
         	{
-        		cout << "Skyping" << strProblemGoal << " goal, already visited." << endl;
+        		//cout << "Skyping" << strProblemGoal << " goal, already visited." << endl;
         		nAlreadyVisited++;
         		continue;
         	}
@@ -1114,7 +1114,7 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
     		string strProblemGoal = "c" + (*posIt)->x + "_" + (*posIt)->y;
         	if(std::find(alreadyVisited.begin(), alreadyVisited.end(), strProblemGoal) != alreadyVisited.end())
         	{
-        		cout << "Skyping " << strProblemGoal << " goal, already visited." << endl;
+        		//cout << "Skyping " << strProblemGoal << " goal, already visited." << endl;
         		nAlreadyVisited++;
         		continue;
         	}
@@ -1133,7 +1133,7 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
 			}
     	}
 
-    	cout << "Distance from proposed new position to goal " << goalChoosed << " = " << minCost << endl;
+    	//cout << "Distance from proposed new position to goal " << goalChoosed << " = " << minCost << endl;
 
     	if(nAlreadyVisited >= (agent->problemGoal.size() + commonProblemGoal.size()))
     	{
@@ -1201,7 +1201,7 @@ double pathPlanningOp::calculateCost(list<ActionSegment >::iterator actItr,
 
     	gCost += riskCost;
 
-    	cout << "PathPlan Operation New Cost is = " << gCost << endl;
+    	//cout << "PathPlan Operation New Cost is = " << gCost << endl;
 
 	}
 

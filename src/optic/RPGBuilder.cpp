@@ -3184,6 +3184,8 @@ void RPGBuilder::initialise()
     DomainAnalysis.findMetricDependentActions();
     DomainAnalysis.findGoalActions();
     DomainAnalysis.findPrecondMetricActions();
+    DomainAnalysis.findFunctionLimitedSolver();
+    DomainAnalysis.findPrecondFunctionLimitedSolver();
     DomainAnalysis.analyseGoalActions();
     DomainAnalysis.analyseGoalTypes();
     DomainAnalysis.findPrecondGoalActions();
@@ -3191,22 +3193,23 @@ void RPGBuilder::initialise()
     DomainAnalysis.calculatenOptimizationsPossible();
     DomainAnalysis.calculatenMaxMetricEstimate();
     DomainAnalysis.findMetricRestrictions();
+    DomainAnalysis.findPossibleUsefullActions();
 
     //PathPlan Module Actions
     pathPlan.createPathPlanRoutes(instantiatedOp::opsBegin(),instantiatedOp::opsEnd(),
 			instantiatedOp::pnesBegin(),instantiatedOp::pnesEnd());
-    cout << current_analysis->the_problem->domain_name << endl;
-    cout << *(current_analysis->the_problem->initial_state) << endl;
+    //cout << current_analysis->the_problem->domain_name << endl;
+    //cout << *(current_analysis->the_problem->initial_state) << endl;
     pathPlan.createPositionList();
-    pathPlan.printAllPositions();
+    //pathPlan.printAllPositions();
     pathPlan.storeOriginGoalsAgents(*(current_analysis->the_problem->the_goal),
     		*(current_analysis->the_problem->initial_state));
     pathPlan.storeMetric(current_analysis->the_problem->metric);
-    pathPlan.printAllRoutes();
+    //pathPlan.printAllRoutes();
     pathPlan.storeDirectPathsPerPos();
-    pathPlan.printDirectPathsPerPos();
+    //pathPlan.printDirectPathsPerPos();
     pathPlan.calculateAllShortPaths();
-    pathPlan.printAllShortPaths();
+    //pathPlan.printAllShortPaths();
 
     #ifdef ENABLE_DEBUGGING_HOOKS
     Globals::markThatActionsInPlanHaveToBeKept();

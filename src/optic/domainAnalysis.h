@@ -110,6 +110,17 @@ public :
 	list<double> weight;
 
 	bool increase;
+	bool assign;
+};
+
+class funcComparison {
+public :
+	functionAnalysis* function;
+	list<functionAnalysis*> operators;
+	list<double> weight;
+
+	bool greater;
+	bool equal;
 };
 
 class actionAnalysis {
@@ -119,14 +130,14 @@ public :
 	list<string> argumentType;
 
 	list<predicateAnalysis*> precondPred;
-	list<functionAnalysis*> precondFunc;
+	list<funcComparison*> precondFunc;
 
 	list<predicateAnalysis*> effectsPred;
 	list<funcOperation*> effectsFuncOp;
 
 	// Boolean that indicates if this action will be used to optimize the metric
 	bool isMetricDependent;
-	// Boolean that indicates if this metric depèndent action aims to be optimized by its parameters
+	// Boolean that indicates if this metric dependent action aims to be optimized by its parameters
 	bool isMetricOptimizer;
 
 	// Boolean that indicates if this action will set a goal predicate
@@ -156,15 +167,24 @@ public :
 	int nOptimizationsPossible;
 	int nOptimizationDone;
 
+	// Bools to check if the action is limited by a domain function
+	// or if it solves the limitation
+	bool isFunctionLimited;
+	bool isFunctionLimitedSolver;
+	bool isFunctionLimitedSolverPrecond;
+
 	//Movement action
 	bool isMovementAction;
+
+	//May be needed for goal or metric precond actions
+	bool isPossiblyUseful;
 
 	actionAnalysis(string AName): name(AName), isMetricDependent(false), isMetricOptimizer(false), isGoalAction(false),
 			isFinalStateGoalAction(false), nActionsRequired(0), isRequiredGoalAction(false), isRequiredMetricAction(false),
 			isMovementAction(false), isMetricFunctionSetterAction(false), isMetricFunctionModifierAction(false),
-			isChangingActiveMetric(false), nOptimizationsPossible(0), nOptimizationDone(0)
+			isChangingActiveMetric(false), nOptimizationsPossible(0), nOptimizationDone(0), isFunctionLimited(false),
+			isFunctionLimitedSolver(false), isFunctionLimitedSolverPrecond(false), isPossiblyUseful(false)
 		{}
-
 };
 
 class objectTypeAnalysis {
@@ -247,7 +267,10 @@ public:
 	void analyseGoalActions();
 	void analyseGoalTypes();
 	void findPrecondGoalActions();
+    void findPossibleUsefullActions();
 	void findPrecondMetricActions();
+	void findFunctionLimitedSolver();
+	void findPrecondFunctionLimitedSolver();
 	void findPositionPredicate();
 	void findMovementAction();
 	void findMetricOptimizerActions();

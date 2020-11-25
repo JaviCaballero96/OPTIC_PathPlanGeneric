@@ -528,6 +528,10 @@ void domainAnalysis::readProblemInit()
 		{
 			while (getline(domainStream, line))
 			{
+				while(line.find(";") != string::npos)
+				{
+					getline(domainStream, line);
+				}
 				transform(line.begin(), line.end(), line.begin(), ::tolower);
 
 				string word;
@@ -1033,8 +1037,56 @@ void domainAnalysis::findPrecondGoalActions()
 			}
 		}
 	}
+}
 
+void domainAnalysis::findPossibleUsefullActions()
+{
+    list<actionAnalysis*>::iterator actIt = actionList.begin();
+    for(; actIt != actionList.end(); actIt++)
+    {
+		if((*actIt)->isRequiredMetricAction || (*actIt)->isRequiredGoalAction)
+		{
+			//cout << (*actIt)->name << endl;
+		    list<actionAnalysis*>::iterator actIt2 = actionList.begin();
+		    for(; actIt2 != actionList.end(); actIt2++)
+		    {
+				if(!((*actIt2)->isRequiredMetricAction) && !((*actIt2)->isRequiredGoalAction) && !((*actIt2)->isGoalAction)
+					&& !((*actIt2)->isChangingActiveMetric) && !((*actIt2)->isMetricDependent) && !((*actIt2)->isMetricOptimizer)
+					&& !((*actIt2)->isFunctionLimitedSolver))
+				{
+					//cout << (*actIt2)->name << endl;
+					list<predicateAnalysis*>::iterator precondIt = (*actIt)->precondPred.begin();
+					for(; precondIt != (*actIt)->precondPred.end(); precondIt++)
+					{
+						list<predicateAnalysis*>::iterator effectIt = (*actIt2)->effectsPred.begin();
+					    for(; effectIt != (*actIt2)->effectsPred.end(); effectIt++)
+					    {
+					    	if((*effectIt)->name == (*precondIt)->name &&
+					    		(*effectIt)->arguments.size() == (*precondIt)->arguments.size())
+							{
+								list<string>::iterator strIt1 = (*effectIt)->argumentType.begin();
+								list<string>::iterator strIt2 = (*precondIt)->argumentType.begin();
+								bool argumentsEqual = true;
+								for(; strIt1 != (*effectIt)->argumentType.end(); strIt1++)
+								{
+									if(*strIt1 != *strIt2)
+									{
+										argumentsEqual = false;
+									}
+									strIt2++;
+								}
 
+								if(argumentsEqual)
+								{
+									(*actIt2)->isPossiblyUseful = true;
+								}
+							}
+					    }
+					}
+				}
+		    }
+		}
+    }
 }
 
 void domainAnalysis::findPrecondMetricActions()
@@ -1085,8 +1137,91 @@ void domainAnalysis::findPrecondMetricActions()
     }
 }
 
+void domainAnalysis::findFunctionLimitedSolver()
+{
+	list<actionAnalysis*>::iterator actIt = actionList.begin();
+	for(; actIt != actionList.end(); actIt++)
+	{
+		if((*actIt)->isMetricDependent || (*actIt)->isGoalAction || (*actIt)->isFinalStateGoalAction
+				|| (*actIt)->isRequiredMetricAction || (*actIt)->isMetricOptimizer)
+		{
+			list<funcComparison*>::iterator funComIt = (*actIt)->precondFunc.begin();
+			for(; funComIt != (*actIt)->precondFunc.end(); funComIt++)
+			{
+				if((*funComIt)->greater)
+				{
+					list<actionAnalysis*>::iterator actIt2 = actionList.begin();
+					for(; actIt2 != actionList.end(); actIt2++)
+					{
+						list<funcOperation*>::iterator funcOpIt = (*actIt2)->effectsFuncOp.begin();
+						for(; funcOpIt != (*actIt2)->effectsFuncOp.end(); funcOpIt++)
+						{
+							if((*funcOpIt)->assign)
+							{
+								if((*funcOpIt)->function->name == (*funComIt)->function->name)
+								{
+									(*actIt2)->isFunctionLimitedSolver = true;
+									(*actIt)->isFunctionLimited = true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void domainAnalysis::findPrecondFunctionLimitedSolver()
+{
+	list<actionAnalysis*>::iterator actIt = actionList.begin();
+	for(; actIt != actionList.end(); actIt++)
+	{
+		if((*actIt)->isFunctionLimitedSolver)
+		{
+		    list<actionAnalysis*>::iterator actIt2 = actionList.begin();
+		    for(; actIt2 != actionList.end(); actIt2++)
+		    {
+		    	if(!((*actIt2)->isMetricOptimizer))
+		    	{
+					list<predicateAnalysis*>::iterator precondIt = (*actIt)->precondPred.begin();
+					for(; precondIt != (*actIt)->precondPred.end(); precondIt++)
+					{
+						list<predicateAnalysis*>::iterator effectIt = (*actIt2)->effectsPred.begin();
+						for(; effectIt != (*actIt2)->effectsPred.end(); effectIt++)
+						{
+							if((*effectIt)->name == (*precondIt)->name &&
+								(*effectIt)->arguments.size() == (*precondIt)->arguments.size())
+							{
+								list<string>::iterator strIt1 = (*effectIt)->argumentType.begin();
+								list<string>::iterator strIt2 = (*precondIt)->argumentType.begin();
+								bool argumentsEqual = true;
+								for(; strIt1 != (*effectIt)->argumentType.end(); strIt1++)
+								{
+									if(*strIt1 != *strIt2)
+									{
+										argumentsEqual = false;
+									}
+									strIt2++;
+								}
+
+								if(argumentsEqual && ((*effectIt)->negated == (*precondIt)->negated))
+								{
+									(*actIt2)->isFunctionLimitedSolverPrecond = true;
+								}
+							}
+						}
+					}
+				}
+		    }
+		}
+	}
+}
+
 void domainAnalysis::findPositionPredicate()
 {
+	string locString, agentString;
+
     list<predicateAnalysis*>::iterator predIt = predicateList.begin();
     for(; predIt != predicateList.end(); predIt++)
     {
@@ -1096,11 +1231,11 @@ void domainAnalysis::findPositionPredicate()
         	list<string>::iterator strIt = (*predIt)->argumentType.begin();
             for(; strIt != (*predIt)->argumentType.end(); strIt++)
             {
-            	if ((*strIt) == "loc")
+            	if ((*strIt) == "sdfsfsdfs")
             	{
             		locType = true;
             	}
-            	else if ((*strIt) == "agent")
+            	else if ((*strIt) == "dsghscxvx")
             	{
             		agentType = true;
             	}
@@ -1208,8 +1343,8 @@ void domainAnalysis::findMetricOptimizerActions()
 
 								if(existsAllArguments)
 								{
-									cout << "Found possible connection: predicate " << (*predIt)->name <<
-											" and function " << (*functionIt)->name << endl;
+									/*cout << "Found possible connection: predicate " << (*predIt)->name <<
+											" and function " << (*functionIt)->name << endl;*/
 
 									//Try to find an action that sets or changes this predicate
 									// 1) Set
@@ -1266,14 +1401,14 @@ void domainAnalysis::findMetricOptimizerActions()
 											{
 												(*actIt2)->isMetricFunctionModifierAction = true;
 												(*actIt2)-> isChangingActiveMetric = isMetricFunction;
-												cout << "Action " << (*actIt2)->name << " modifies the state of function "
-														<< (*functionIt)->name << endl;
+												/*cout << "Action " << (*actIt2)->name << " modifies the state of function "
+														<< (*functionIt)->name << endl;*/
 											}else if(exists)
 											{
 												(*actIt2)->isMetricFunctionSetterAction = true;
 												(*actIt2)-> isChangingActiveMetric = isMetricFunction;
-												cout << "Action " << (*actIt2)->name << " sets the state of function "
-														<< (*functionIt)->name << endl;
+												/*cout << "Action " << (*actIt2)->name << " sets the state of function "
+														<< (*functionIt)->name << endl;*/
 											}
 										}
 									}
@@ -1318,6 +1453,7 @@ void domainAnalysis::calculatenOptimizationsPossible()
 					}
 
 					nOptions = nOptions - (*effectIt)->argumentType.size();
+					if(nOptions == 0) nOptions = 1;
 
 					if((*actIt)->nOptimizationsPossible < nOptions)
 					{
@@ -1621,6 +1757,7 @@ bool domainAnalysis::isUnkownUseAction(actionAnalysis action)
 			!(action.isFinalStateGoalAction ) && action.nActionsRequired == 0 && !(action.isRequiredGoalAction) &&
 			!(action.isRequiredMetricAction) && !(action.isMovementAction) && !(action.isMetricFunctionSetterAction) &&
 			!(action.isMetricFunctionModifierAction) && !(action.isChangingActiveMetric) &&
+			!(action.isFunctionLimited) && !(action.isFunctionLimitedSolver) &&
 			action.nOptimizationsPossible == 0 && action.nOptimizationDone == 0)
 	{
 		return true;
@@ -1652,10 +1789,13 @@ functionAnalysis* domainAnalysis::findFunction(string argName)
 void domainAnalysis::readDomainActPrecond(ifstream *domainStream)
 {
 	string line;
+	string oriLine;
 	while (getline(*domainStream, line))
 	{
-		line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
+		//cout << line << endl;
 		transform(line.begin(), line.end(), line.begin(), ::tolower);
+		oriLine = line;
+		line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
 
 		list<predicateAnalysis*>::iterator predIt = predicateList.begin();
 		for(; predIt != predicateList.end(); predIt++)
@@ -1685,6 +1825,7 @@ void domainAnalysis::readDomainActPrecond(ifstream *domainStream)
 			}
 		}
 
+		line = oriLine;
 		list<functionAnalysis*>::iterator funcIt = functionList.begin();
 		for(; funcIt != functionList.end(); funcIt++)
 		{
@@ -1692,9 +1833,130 @@ void domainAnalysis::readDomainActPrecond(ifstream *domainStream)
 					line.find("duration") == string::npos)
 			{
 
+				string word;
+				bool negative = false;
+				int n = 0;
+				funcComparison* funcCom = new funcComparison();
+
+				istringstream lineStream(line);
+				while(lineStream >> word)
+				{
+					while(word.find("(") != string::npos)
+					{
+						word = word.substr(word.find("(") + 1, word.length());
+					}
+					while(word.find(")") != string::npos)
+					{
+						word = word.substr(0, word.find(")"));
+					}
+
+					if(word == "<")
+					{
+						funcCom->greater = false;
+						funcCom->equal = false;
+						break;
+					}else if(word == ">")
+					{
+						funcCom->greater = true;
+						funcCom->equal = false;
+						break;
+					}else if(word == "=")
+					{
+						funcCom->greater = false;
+						funcCom->equal = true;
+						break;
+					}
+				}
+
+				lineStream >> word;
+				while(word.find("(") != string::npos)
+				{
+					word = word.substr(word.find("(") + 1, word.length());
+				}
+				while(word.find(")") != string::npos)
+				{
+					word = word.substr(0, word.find(")"));
+				}
+
+				functionAnalysis* function = this->findFunction(word);
+				if(function != NULL)
+				{
+					funcCom->function = new functionAnalysis(*function);
+					int arguments = function->arguments.size();
+
+					for(int i = 0; i < arguments; i++)
+					{
+						lineStream >> word;
+						while(word.find("(") != string::npos)
+						{
+							word = word.substr(word.find("(") + 1, word.length());
+						}
+						while(word.find(")") != string::npos)
+						{
+							word = word.substr(0, word.find(")"));
+						}
+						funcCom->function->argumentValue.push_back(word);
+					}
+				}
+
+				while(lineStream >> word)
+				{
+					while(word.find("(") != string::npos)
+					{
+						word = word.substr(word.find("(") + 1, word.length());
+					}
+					while(word.find(")") != string::npos)
+					{
+						word = word.substr(0, word.find(")"));
+					}
+
+					if(word == "-" || word=="/")
+					{
+						negative = true;
+						n = 0;
+					}
+
+					functionAnalysis* function = this->findFunction(word);
+					if(function != NULL)
+					{
+						int arguments = function->arguments.size();
+						functionAnalysis* functionVal = new functionAnalysis(function);
+
+						for(int i = 0; i < arguments; i++)
+						{
+							lineStream >> word;
+							while(word.find("(") != string::npos)
+							{
+								word = word.substr(word.find("(") + 1, word.length());
+							}
+							while(word.find(")") != string::npos)
+							{
+								word = word.substr(0, word.find(")"));
+							}
+							functionVal->argumentValue.push_back(word);
+						}
+						if(n == 1 && negative == true)
+						{
+							negative = false;
+							funcCom->weight.push_back((double) -1);
+						}else
+						{
+							funcCom->weight.push_back((double) 1);
+						}
+						n++;
+
+						funcCom->operators.push_back(functionVal);
+					}
+				}
+
+				actionAnalysis* actIt = actionList.back();
+				actIt->precondFunc.push_back(funcCom);
+				break;
+
 			}
 		}
 
+		line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
 		if(line == ")")
 		{
 			break;
@@ -1787,10 +2049,17 @@ void domainAnalysis::readDomainActEffects(ifstream *domainStream)
 					if(word == "increase")
 					{
 						funcOp->increase = true;
+						funcOp->assign = false;
 						break;
 					}else if(word == "decrease")
 					{
 						funcOp->increase = false;
+						funcOp->assign = false;
+						break;
+					}else if(word == "assign")
+					{
+						funcOp->increase = false;
+						funcOp->assign = true;
 						break;
 					}
 				}
@@ -1886,19 +2155,6 @@ void domainAnalysis::readDomainActEffects(ifstream *domainStream)
 		if(line == ")")
 		{
 			break;
-		}
-	}
-
-
-	list<functionAnalysis*>::iterator funcIt = functionList.begin();
-	for(; funcIt != functionList.end(); funcIt++)
-	{
-		if(line.find((*funcIt)->name) != string::npos)
-		{
-			actionAnalysis* actIt = actionList.back();
-			functionAnalysis *funcAux = new functionAnalysis(*funcIt);
-
-			actIt->precondFunc.push_back(funcAux);
 		}
 	}
 }

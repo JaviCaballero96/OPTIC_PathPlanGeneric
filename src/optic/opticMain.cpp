@@ -133,6 +133,7 @@ int main(int argc, char * argv[])
     bool postHocTotalOrder = false;
     bool debugPreprocessing = false;
     bool postHocScheduleToMetric = false;
+    bool printPlanOut = false;
     
     #ifdef STOCHASTICDURATIONS
     const char * const defaultDurationManager = "montecarlo";
@@ -228,6 +229,10 @@ int main(int argc, char * argv[])
             }
             case 'j': {
                 FF::distanceRiskBatteryMetric = true;
+                break;
+            }
+            case 'y': {
+            	printPlanOut = true;
                 break;
             }
             case 'g': {
@@ -602,10 +607,22 @@ int main(int argc, char * argv[])
                 cout << ";;;; Solution Found\n";
                 cout << "; States evaluated: " << RPGHeuristic::statesEvaluated << endl;
                 cout << "; Cost: " << planAndConstraints.quality << endl;
+                if(printPlanOut)
+                {
+                    std::ofstream out("/opt/multi-agent/ARIES/planners/sol/out.txt");
+                    std::streambuf *coutbuf = std::cout.rdbuf();
+                    std::cout.rdbuf(out.rdbuf());
+
+                    cout << ";;;; Solution Found\n";
+                    cout << "; States evaluated: " << RPGHeuristic::statesEvaluated << endl;
+                    cout << "; Cost: " << planAndConstraints.quality << endl;
+                    FFEvent::printPlan(*spSoln);
+
+                    std::cout.rdbuf(coutbuf);
+                }
             }
             
             FFEvent::printPlan(*spSoln);
-            
         }
 
         if (benchmark) {
